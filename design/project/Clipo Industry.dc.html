@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/industry-53b99634-443f-4509-9a67-a69b35447126/styles.css">
+<script src="_ds/industry-53b99634-443f-4509-9a67-a69b35447126/_ds_bundle.js"></script>
+<script src="clipo-core.js"></script>
+<style>body{margin:0;background:var(--color-bg)}a{color:var(--color-accent-700)}a:hover{color:var(--color-accent)}@property --glow{syntax:"<color>";inherits:false;initial-value:#f2f2f3}@keyframes spin{to{transform:rotate(360deg)}}input::placeholder{color:var(--color-neutral-500)}.scr::-webkit-scrollbar{display:none}</style>
+</helmet>
+<div style="min-height:100vh;display:flex;flex-wrap:wrap;gap:56px;align-items:flex-start;padding:48px;font-family:var(--font-body);color:var(--color-text);background-color:var(--color-bg);background-image:linear-gradient(var(--color-divider) 1px, transparent 1px),linear-gradient(90deg, var(--color-divider) 1px, transparent 1px);background-size:32px 32px">
+
+  <div style="width:390px;height:844px;flex:none;border-radius:54px;padding:10px;background:var(--color-text);box-shadow:var(--shadow-lg)">
+    <div style="position:relative;width:100%;height:100%;border-radius:44px;overflow:hidden;--glow:{{ glow }};transition:--glow .7s ease;background:linear-gradient(160deg, var(--glow), var(--color-bg) 50%)">
+
+      <div style="position:absolute;top:0;left:0;right:0;height:50px;display:flex;align-items:center;justify-content:space-between;padding:0 30px 0 34px;font-size:15px;font-weight:500;z-index:5">
+        <span>9:41</span>
+        <div style="position:absolute;left:50%;top:10px;transform:translateX(-50%);width:120px;height:34px;border-radius:20px;background:var(--color-text)"></div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <svg width="18" height="12" viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" fill="currentColor"></rect><rect x="5" y="5" width="3" height="7" fill="currentColor"></rect><rect x="10" y="2" width="3" height="10" fill="currentColor"></rect><rect x="15" y="0" width="3" height="12" fill="currentColor"></rect></svg>
+          <svg width="26" height="12" viewBox="0 0 26 12"><rect x="0.5" y="0.5" width="22" height="11" fill="none" stroke="currentColor"></rect><rect x="2" y="2" width="17" height="8" fill="currentColor"></rect></svg>
+        </div>
+      </div>
+
+      <div class="scr" style="position:absolute;top:50px;left:0;right:0;bottom:84px;overflow-y:auto;scrollbar-width:none">
+
+        <sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+          <div style="padding:14px 22px 36px;display:flex;flex-direction:column;gap:26px">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span style="font-family:var(--font-heading);font-weight:600;font-size:22px;letter-spacing:.06em;text-transform:uppercase">Clipo</span>
+              <span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600)">Motor · yt-dlp</span>
+            </div>
+            <div>
+              <div style="font-size:11px;letter-spacing:.1em;color:var(--color-accent-700);margin-bottom:6px">01 / ENTRADA</div>
+              <h1 style="font-size:44px;line-height:.95;margin:0;text-transform:uppercase">Descarga<br>desde cualquier<br>plataforma</h1>
+            </div>
+            <div class="card blueprint" style="padding:14px;gap:12px">
+              <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+              <div class="field">
+                <label>URL del video o playlist</label>
+                <div style="display:flex;gap:8px">
+                  <input class="input" value="{{ url }}" onChange="{{ onUrl }}" placeholder="{{ placeholder }}" style="flex:1;min-width:0;min-height:46px;font-size:15px">
+                  <button class="btn btn-secondary" onClick="{{ onPaste }}" style="height:46px;padding:0 14px">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path></svg>Pegar
+                  </button>
+                </div>
+              </div>
+              <sc-if value="{{ detected }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.04em;text-transform:uppercase">
+                  <span style="width:8px;height:8px;border:1px solid var(--color-accent);background:var(--color-accent-200)"></span>
+                  <span style="color:var(--color-neutral-600)">Fuente detectada</span><b style="color:var(--color-accent-700);font-weight:500">{{ detectedName }}</b>
+                </div>
+              </sc-if>
+              <button class="btn btn-primary blueprint" disabled="{{ cantAnalyze }}" onClick="{{ onAnalyze }}" style="height:50px;font-size:16px;letter-spacing:.06em;text-transform:uppercase;font-family:var(--font-heading)">
+                <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+                <sc-if value="{{ analyzing }}" hint-placeholder-val="{{ false }}"><span style="width:14px;height:14px;border:1.5px solid var(--color-accent-300);border-top-color:var(--color-bg);border-radius:50%;animation:spin .8s linear infinite"></span></sc-if>
+                {{ analyzeLabel }}
+              </button>
+            </div>
+            <sc-if value="{{ showGrid }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <div style="display:flex;justify-content:space-between;font-size:11px;letter-spacing:.1em;text-transform:uppercase">
+                  <span style="color:var(--color-accent-700)">02 / Plataformas</span><span style="color:var(--color-neutral-600)">+1000 sitios</span>
+                </div>
+                <div class="blueprint" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-left:1px solid var(--color-divider);border-top:1px solid var(--color-divider)">
+                  <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+                  <sc-for list="{{ platforms }}" as="p" hint-placeholder-count="9">
+                    <button onClick="{{ p.onClick }}" style="all:unset;cursor:pointer;display:flex;flex-direction:column;justify-content:space-between;height:78px;padding:10px;border-right:1px solid var(--color-divider);border-bottom:1px solid var(--color-divider);background:{{ p.bg }};color:{{ p.color }}">
+                      <span style="font-family:var(--font-heading);font-size:22px;font-weight:600;letter-spacing:.04em">{{ p.mono }}</span>
+                      <span style="font-size:12px;letter-spacing:.04em;text-transform:uppercase">{{ p.name }}</span>
+                    </button>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isOptions }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:10px 22px 130px;display:flex;flex-direction:column;gap:22px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <button class="btn btn-secondary btn-icon" onClick="{{ onBack }}" style="width:40px;height:40px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M15 18l-6-6 6-6"></path></svg></button>
+              <span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent-700)">03 / Configuración</span>
+            </div>
+            <div class="blueprint duotone" style="position:relative;aspect-ratio:16/9;display:grid;place-items:center;background:var(--color-accent-100)">
+              <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+              <svg width="100%" height="100%" viewBox="0 0 160 90" preserveAspectRatio="none" style="position:absolute;inset:0" stroke="var(--color-accent-300)" stroke-width=".5" fill="none"><path d="M0 0L160 90M160 0L0 90"></path></svg>
+              <div style="position:relative;width:52px;height:52px;border:1px solid var(--color-accent);background:var(--color-bg);display:grid;place-items:center;color:var(--color-accent)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M7 4l13 8-13 8z"></path></svg></div>
+              <span class="tag tag-accent" style="position:absolute;left:10px;top:10px">{{ meta.platformName }}</span>
+              <span class="tag tag-outline" style="position:absolute;right:10px;bottom:10px;background:var(--color-bg)">{{ meta.duration }}</span>
+            </div>
+            <div>
+              <h3 style="font-size:24px;line-height:1.05;margin:0 0 4px;text-transform:uppercase;text-wrap:pretty">{{ meta.title }}</h3>
+              <div style="font-size:13px;color:var(--color-neutral-600)">{{ meta.author }}</div>
+            </div>
+
+            <sc-if value="{{ isPlaylist }}" hint-placeholder-val="{{ false }}">
+              <div class="card blueprint" style="padding:0;gap:0">
+                <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:1px solid var(--color-divider)">
+                  <span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase">{{ plSelLabel }}</span>
+                  <button class="btn btn-ghost" onClick="{{ onPlAll }}" style="font-size:12px;text-transform:uppercase;letter-spacing:.06em">{{ plAllLabel }}</button>
+                </div>
+                <sc-for list="{{ plItems }}" as="it" hint-placeholder-count="4">
+                  <button onClick="{{ it.onClick }}" style="all:unset;cursor:pointer;display:grid;grid-template-columns:20px 26px 1fr auto;align-items:center;gap:8px;padding:0 12px;min-height:44px;border-top:{{ it.divider }}">
+                    <span style="width:16px;height:16px;border:1px solid {{ it.border }};background:{{ it.bg }};display:grid;place-items:center;color:var(--color-bg)"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="opacity:{{ it.tick }}"><path d="M4 12l5 5L20 6"></path></svg></span>
+                    <span style="font-family:var(--font-heading);font-size:14px;color:var(--color-neutral-600)">{{ it.n }}</span>
+                    <span style="font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ it.title }}</span>
+                    <span style="font-size:12px;color:var(--color-neutral-600);font-variant-numeric:tabular-nums">{{ it.duration }}</span>
+                  </button>
+                </sc-for>
+              </div>
+            </sc-if>
+
+            <div class="seg" style="display:grid;grid-template-columns:1fr 1fr">
+              <sc-for list="{{ modes }}" as="m" hint-placeholder-count="2">
+                <button onClick="{{ m.onClick }}" class="seg-opt" style="all:unset;cursor:pointer;height:44px;display:flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-size:15px;letter-spacing:.06em;text-transform:uppercase;border-left:{{ m.bl }};color:{{ m.color }};background:{{ m.bg }}">{{ m.label }}</button>
+              </sc-for>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600)">Calidad</span>
+              <div style="display:grid;grid-template-columns:1fr 1fr;border-left:1px solid var(--color-divider);border-top:1px solid var(--color-divider)">
+                <sc-for list="{{ qualities }}" as="q" hint-placeholder-count="4">
+                  <button onClick="{{ q.onClick }}" style="all:unset;cursor:pointer;position:relative;display:flex;flex-direction:column;gap:2px;padding:12px;border-right:1px solid var(--color-divider);border-bottom:1px solid var(--color-divider);background:{{ q.bg }};box-shadow:{{ q.ring }}">
+                    <span style="font-family:var(--font-heading);font-size:24px;font-weight:600;line-height:1;color:{{ q.color }}">{{ q.label }}</span>
+                    <span style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--color-neutral-600)">{{ q.sub }} · {{ q.size }}</span>
+                    <sc-if value="{{ q.hasNote }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;top:8px;right:8px;width:6px;height:6px;background:var(--color-accent)"></span></sc-if>
+                  </button>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600)">Contenedor</span>
+              <div class="seg" style="display:grid;grid-template-columns:repeat(3,1fr)">
+                <sc-for list="{{ formats }}" as="f" hint-placeholder-count="3">
+                  <button onClick="{{ f.onClick }}" class="seg-opt" style="all:unset;cursor:pointer;height:42px;display:flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-size:15px;letter-spacing:.06em;border-left:{{ f.divider }};color:{{ f.color }};background:{{ f.bg }}">{{ f.label }}</button>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isProgress }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:10px 22px 36px;display:flex;flex-direction:column;gap:22px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <button class="btn btn-secondary btn-icon" onClick="{{ onCloseDetail }}" style="width:40px;height:40px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M15 18l-6-6 6-6"></path></svg></button>
+              <span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent-700)">04 / Proceso · {{ pd.mono }}</span>
+            </div>
+            <div class="card blueprint" style="padding:16px;gap:14px">
+              <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+              <div style="display:flex;justify-content:space-between;align-items:flex-end">
+                <span style="font-family:var(--font-heading);font-size:88px;font-weight:600;line-height:.85;color:var(--color-accent-700)">{{ pd.pct }}</span>
+                <span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600);padding-bottom:6px">{{ pd.status }}</span>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(30,1fr);gap:2px;height:22px">
+                <sc-for list="{{ ticks }}" as="k" hint-placeholder-count="30">
+                  <span style="background:{{ k.bg }};border:1px solid {{ k.border }}"></span>
+                </sc-for>
+              </div>
+              <div>
+                <div style="font-family:var(--font-heading);font-size:20px;line-height:1.1;text-transform:uppercase;text-wrap:pretty">{{ pd.title }}</div>
+              </div>
+            </div>
+            <table class="table">
+              <tbody>
+                <tr><td style="color:var(--color-neutral-600);font-size:12px;text-transform:uppercase;letter-spacing:.06em">Formato</td><td style="text-align:right">{{ pd.meta }}</td></tr>
+                <tr><td style="color:var(--color-neutral-600);font-size:12px;text-transform:uppercase;letter-spacing:.06em">Transferido</td><td style="text-align:right">{{ pd.sizeLabel }}</td></tr>
+                <tr><td style="color:var(--color-neutral-600);font-size:12px;text-transform:uppercase;letter-spacing:.06em">Restante</td><td style="text-align:right">{{ pd.eta }}</td></tr>
+              </tbody>
+            </table>
+            <div style="display:flex;flex-direction:column">
+              <sc-for list="{{ stages }}" as="g" hint-placeholder-count="4">
+                <div style="display:grid;grid-template-columns:28px 1fr auto;align-items:center;min-height:36px;color:{{ g.color }}">
+                  <span style="font-family:var(--font-heading);font-size:14px">0{{ g.n }}</span>
+                  <span style="font-size:14px">{{ g.label }}</span>
+                  <span style="font-size:10px;letter-spacing:.1em;text-transform:uppercase">{{ g.tag }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <sc-if value="{{ pd.notDone }}" hint-placeholder-val="{{ true }}">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <button class="btn btn-secondary" onClick="{{ pd.onPause }}" style="height:46px;text-transform:uppercase;letter-spacing:.06em;font-family:var(--font-heading);font-size:15px">{{ pd.pauseLabel }}</button>
+                <button class="btn btn-ghost" onClick="{{ pd.onCancel }}" style="height:46px;text-transform:uppercase;letter-spacing:.06em;font-family:var(--font-heading);font-size:15px;color:var(--color-neutral-700)">Cancelar</button>
+              </div>
+            </sc-if>
+            <sc-if value="{{ pd.isDone }}" hint-placeholder-val="{{ false }}">
+              <button class="btn btn-primary blueprint" onClick="{{ onNew }}" style="height:50px;text-transform:uppercase;letter-spacing:.06em;font-family:var(--font-heading);font-size:16px"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>Descargar otro</button>
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isQueue }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:14px 22px 36px;display:flex;flex-direction:column;gap:22px">
+            <div style="display:flex;justify-content:space-between;align-items:flex-end">
+              <div>
+                <div style="font-size:11px;letter-spacing:.1em;color:var(--color-accent-700);margin-bottom:4px">05 / COLA</div>
+                <h1 style="font-size:40px;line-height:.9;margin:0;text-transform:uppercase">Descargas</h1>
+              </div>
+              <sc-if value="{{ hasActive }}" hint-placeholder-val="{{ false }}"><button class="btn btn-ghost" onClick="{{ onPauseAll }}" style="font-size:12px;text-transform:uppercase;letter-spacing:.06em">{{ pauseAllLabel }}</button></sc-if>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:14px">
+              <span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600)">En curso · {{ activeCount }} · 2 simultáneas</span>
+              <sc-if value="{{ noActive }}" hint-placeholder-val="{{ false }}">
+                <div class="card blueprint" style="padding:18px;font-size:13px;color:var(--color-neutral-600)"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>Sin procesos activos. Introduce una URL en Inicio.</div>
+              </sc-if>
+              <sc-for list="{{ active }}" as="d" hint-placeholder-count="1">
+                <div class="card blueprint" style="padding:12px;gap:10px">
+                  <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+                  <div style="display:flex;gap:10px;align-items:center">
+                    <button onClick="{{ d.onOpen }}" style="all:unset;cursor:pointer;flex:1;min-width:0;display:flex;gap:10px;align-items:center">
+                      <span style="width:40px;height:40px;flex:none;border:1px solid var(--color-accent);color:var(--color-accent-700);display:grid;place-items:center;font-family:var(--font-heading);font-size:15px;font-weight:600">{{ d.mono }}</span>
+                      <span style="flex:1;min-width:0;display:flex;flex-direction:column">
+                        <span style="font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ d.title }}</span>
+                        <span style="font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--color-neutral-600)">{{ d.meta }} · {{ d.status }}</span>
+                      </span>
+                    </button>
+                    <button class="btn btn-secondary btn-icon" onClick="{{ d.onPause }}" style="width:36px;height:36px" aria-label="{{ d.pauseLabel }}">
+                      <sc-if value="{{ d.paused }}" hint-placeholder-val="{{ false }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M7 4l13 8-13 8z"></path></svg></sc-if>
+                      <sc-if value="{{ d.notPaused }}" hint-placeholder-val="{{ true }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg></sc-if>
+                    </button>
+                    <button class="btn btn-ghost btn-icon" onClick="{{ d.onCancel }}" style="width:36px;height:36px" aria-label="Cancelar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <div style="flex:1;height:6px;border:1px solid var(--color-divider)"><div style="height:100%;width:{{ d.pct }};background:var(--color-accent);transition:width .4s"></div></div>
+                    <span style="font-family:var(--font-heading);font-size:15px;width:38px;text-align:right">{{ d.pct }}</span>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+            <sc-if value="{{ hasDone }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600)">Completadas · {{ doneCount }}</span>
+                  <button class="btn btn-ghost" onClick="{{ onClearDone }}" style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--color-neutral-600)">Limpiar</button>
+                </div>
+                <table class="table">
+                  <tbody>
+                    <sc-for list="{{ done }}" as="d" hint-placeholder-count="2">
+                      <tr onClick="{{ d.onOpen }}" style="cursor:pointer">
+                        <td style="width:34px;font-family:var(--font-heading);color:var(--color-accent-700)">{{ d.mono }}</td>
+                        <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ d.title }}</td>
+                        <td style="text-align:right;font-size:12px;color:var(--color-neutral-600);white-space:nowrap">{{ d.meta }}</td>
+                      </tr>
+                    </sc-for>
+                  </tbody>
+                </table>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
+      </div>
+
+      <sc-if value="{{ isOptions }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;left:0;right:0;bottom:84px;padding:16px 22px;background:linear-gradient(to top, var(--color-bg) 75%, transparent)">
+          <button class="btn btn-primary blueprint" disabled="{{ cantDownload }}" onClick="{{ onDownload }}" style="width:100%;height:56px;justify-content:space-between;padding:0 16px">
+            <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+            <span style="font-family:var(--font-heading);font-size:18px;letter-spacing:.06em;text-transform:uppercase">{{ dlLabel }}</span>
+            <span style="font-size:12px;opacity:.9">{{ summary }}</span>
+          </button>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+        <div class="blueprint" style="position:absolute;left:22px;right:22px;bottom:100px;padding:12px 14px;background:var(--color-bg);font-size:13px;letter-spacing:.04em;text-transform:uppercase;z-index:6"><i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>{{ toast }}</div>
+      </sc-if>
+
+      <div style="position:absolute;left:0;right:0;bottom:0;height:84px;display:grid;grid-template-columns:repeat(2,1fr);border-top:1px solid var(--color-divider);background:var(--color-bg)">
+        <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="2">
+          <button onClick="{{ t.onClick }}" style="all:unset;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;height:52px;font-family:var(--font-heading);font-size:15px;letter-spacing:.08em;text-transform:uppercase;color:{{ t.color }};border-left:{{ t.bl }};box-shadow:{{ t.bar }}">
+            <sc-if value="{{ t.isHome }}" hint-placeholder-val="{{ false }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M3 10l9-7 9 7v11h-6v-7H9v7H3z"></path></svg></sc-if>
+            <sc-if value="{{ t.isQueue }}" hint-placeholder-val="{{ false }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"></path></svg></sc-if>
+            {{ t.label }}
+            <sc-if value="{{ t.hasBadge }}" hint-placeholder-val="{{ false }}"><span style="min-width:18px;height:18px;padding:0 4px;border:1px solid var(--color-accent);color:var(--color-accent-700);font-size:11px;display:grid;place-items:center">{{ t.badge }}</span></sc-if>
+          </button>
+        </sc-for>
+        <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:var(--color-text)"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card blueprint" style="max-width:320px;padding:18px;gap:10px;margin-top:24px;background:var(--color-bg)">
+    <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+    <span class="card-kicker" style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent-700)">Propuesta · Industry</span>
+    <h3 style="margin:0;text-transform:uppercase">Plano técnico</h3>
+    <p style="margin:0;font-size:14px;color:var(--color-neutral-700)">Cada pantalla es una ficha numerada: marcas de registro, celdas visibles y progreso por segmentos, como un instrumento.</p>
+    <div style="display:flex;flex-direction:column;gap:4px;font-size:13px">
+      <a href="Clipo Nocturne.dc.html">Nocturne →</a><a href="Clipo Modernist.dc.html">Modernist →</a><a href="Clipo Broadsheet.dc.html">Broadsheet →</a>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;showPlatformGrid&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;startScreen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;home&quot;,&quot;options&quot;,&quot;queue&quot;],&quot;default&quot;:&quot;home&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+const A = 'var(--color-accent)', INK = 'var(--color-text)', DIV = '1px solid var(--color-divider)';
+const T = {
+  glow: { youtube: 'oklch(0.9 0.05 25)', instagram: 'oklch(0.9 0.05 350)', facebook: 'oklch(0.9 0.045 262)', tiktok: 'oklch(0.9 0.045 195)', x: 'oklch(0.87 0.005 270)', vimeo: 'oklch(0.9 0.045 225)', reddit: 'oklch(0.9 0.06 45)', soundcloud: 'oklch(0.91 0.06 60)', other: 'var(--color-accent-200)', none: 'var(--color-bg)' },
+  divider: DIV,
+  tile: { on: { bg: 'var(--color-accent-100)', color: 'var(--color-accent-700)' }, off: { bg: 'transparent', color: INK } },
+  mode: { on: { color: 'var(--color-bg)', bg: A }, off: { color: INK, bg: 'transparent' } },
+  q: { on: { bg: 'var(--color-accent-100)', ring: 'inset 0 0 0 1px ' + A, color: 'var(--color-accent-700)' }, off: { bg: 'transparent', ring: 'none', color: INK } },
+  fmt: { on: { color: 'var(--color-bg)', bg: A }, off: { color: INK, bg: 'transparent' } },
+  check: { on: { border: A, bg: A, tick: 1 }, off: { border: 'var(--color-neutral-500)', bg: 'transparent', tick: 0 } },
+  stage: { done: { color: 'var(--color-neutral-600)', tag: 'OK' }, active: { color: 'var(--color-accent-700)', tag: 'En curso' }, pending: { color: 'var(--color-neutral-400)', tag: '—' } },
+  tab: { on: { color: 'var(--color-accent-700)', bar: 'inset 0 2px 0 ' + A }, off: { color: 'var(--color-neutral-600)', bar: 'none' } },
+};
+class Component extends DCLogic {
+  componentDidMount() { const go = () => window.ClipoCore ? (this._t = window.ClipoCore.start(this)) : setTimeout(go, 50); go(); }
+  componentWillUnmount() { clearInterval(this._t); }
+  renderVals() {
+    if (!window.ClipoCore) return {};
+    const v = window.ClipoCore.vals(this, T);
+    v.modes = v.modes.map((m, i) => Object.assign(m, { bl: i ? DIV : 'none' }));
+    v.tabs = v.tabs.map((t, i) => Object.assign(t, { bl: i ? DIV : 'none' }));
+    v.active = v.active.map(d => Object.assign(d, { notPaused: !d.paused }));
+    const n = Math.round(((v.pd && v.pd.pctNum) || 0) / 100 * 30);
+    v.ticks = Array.from({ length: 30 }, (_, i) => i < n ? { bg: A, border: A } : { bg: 'transparent', border: 'var(--color-divider)' });
+    return v;
+  }
+}
+</script>
+</body>
+</html>

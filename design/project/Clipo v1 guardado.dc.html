@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/nocturne-f619db5c-7fd1-4097-9ba8-515b43cbbc6f/styles.css">
+<script src="_ds/nocturne-f619db5c-7fd1-4097-9ba8-515b43cbbc6f/_ds_bundle.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>body{margin:0;background:var(--color-bg)}a{color:var(--color-accent)}a:hover{color:var(--color-accent-400)}@property --glow{syntax:"<color>";inherits:false;initial-value:#2b2741}@keyframes spin{to{transform:rotate(360deg)}}input::placeholder{color:var(--color-neutral-600)}.scr::-webkit-scrollbar{display:none}</style>
+</helmet>
+<div style="min-height:100vh;display:flex;flex-wrap:wrap;gap:56px;align-items:flex-start;padding:48px;font-family:var(--font-body);color:var(--color-text);background:radial-gradient(900px 600px at 20% 0%, var(--color-accent-900), var(--color-bg) 70%)">
+
+  <div style="width:390px;height:844px;flex:none;border-radius:54px;padding:10px;background:var(--color-neutral-900);box-shadow:var(--shadow-lg)">
+    <div style="position:relative;width:100%;height:100%;border-radius:44px;overflow:hidden;--glow:{{ glow }};transition:--glow .7s ease;background:radial-gradient(460px 380px at 0% 0%, var(--glow), var(--color-bg) 80%)">
+
+      <div style="position:absolute;top:0;left:0;right:0;height:50px;display:flex;align-items:center;justify-content:space-between;padding:0 30px 0 34px;font-size:15px;font-weight:600;z-index:5">
+        <span>9:41</span>
+        <div style="position:absolute;left:50%;top:10px;transform:translateX(-50%);width:120px;height:34px;border-radius:20px;background:var(--color-neutral-900)"></div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <svg width="18" height="12" viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx="1" fill="currentColor"></rect><rect x="5" y="5" width="3" height="7" rx="1" fill="currentColor"></rect><rect x="10" y="2" width="3" height="10" rx="1" fill="currentColor"></rect><rect x="15" y="0" width="3" height="12" rx="1" fill="currentColor"></rect></svg>
+          <svg width="26" height="12" viewBox="0 0 26 12"><rect x="0.5" y="0.5" width="22" height="11" rx="3" fill="none" stroke="currentColor" opacity="0.5"></rect><rect x="2" y="2" width="17" height="8" rx="2" fill="currentColor"></rect><rect x="24" y="4" width="2" height="4" rx="1" fill="currentColor" opacity="0.5"></rect></svg>
+        </div>
+      </div>
+
+      <div class="scr" style="position:absolute;top:50px;left:0;right:0;bottom:84px;overflow-y:auto;scrollbar-width:none">
+
+        <sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+          <div style="padding:20px 22px 32px;display:flex;flex-direction:column;gap:24px">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <div style="display:flex;align-items:center;gap:10px">
+                <div style="width:32px;height:32px;border-radius:var(--radius-md);border:1px solid var(--color-accent);display:grid;place-items:center;color:var(--color-accent);box-shadow:0 0 18px color-mix(in srgb, var(--color-accent) 35%, transparent)">
+                  <svg width="18" height="18" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"><path d="M128 40v112"></path><path d="M84 112l44 44 44-44"></path><path d="M48 200h160"></path></svg>
+                </div>
+                <span style="font-size:18px;font-weight:500">Clipo</span>
+              </div>
+              <span class="tag tag-neutral">yt-dlp 2026.09</span>
+            </div>
+
+            <div>
+              <h2 style="font-size:30px;margin:0 0 6px;text-wrap:pretty">¿Qué quieres guardar hoy?</h2>
+              <p style="margin:0;font-size:14px;color:var(--color-neutral-500)">Pega un enlace de cualquier plataforma.</p>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div style="position:relative;display:flex;align-items:center">
+                <div style="position:absolute;left:14px;color:var(--color-neutral-500);display:flex">
+                  <svg width="18" height="18" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round"><path d="M136 72l12-12a40 40 0 0 1 56 56l-28 28a40 40 0 0 1-56 0"></path><path d="M120 184l-12 12a40 40 0 0 1-56-56l28-28a40 40 0 0 1 56 0"></path></svg>
+                </div>
+                <input class="input" value="{{ url }}" onChange="{{ onUrl }}" placeholder="{{ placeholder }}" style="min-height:52px;padding:0 84px 0 42px;font-size:15px;border-radius:var(--radius-lg)">
+                <button class="btn btn-ghost" onClick="{{ onPaste }}" style="position:absolute;right:8px;height:36px;padding:0 10px;font-size:13px">Pegar</button>
+              </div>
+              <sc-if value="{{ detected }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--color-neutral-400)">
+                  <span style="width:6px;height:6px;border-radius:3px;background:var(--color-accent);box-shadow:0 0 8px var(--color-accent)"></span>
+                  Detectado: <span style="color:var(--color-accent-300)">{{ detectedName }}</span>
+                </div>
+              </sc-if>
+              <button class="btn btn-primary" disabled="{{ cantAnalyze }}" onClick="{{ onAnalyze }}" style="height:52px;border-radius:var(--radius-lg);font-size:15px;box-shadow:0 0 24px color-mix(in srgb, var(--color-accent) 22%, transparent)">
+                <sc-if value="{{ analyzing }}" hint-placeholder-val="{{ false }}">
+                  <span style="width:16px;height:16px;border-radius:8px;border:2px solid var(--color-accent-800);border-top-color:var(--color-accent);animation:spin .8s linear infinite"></span>
+                </sc-if>
+                {{ analyzeLabel }}
+              </button>
+            </div>
+
+            <sc-if value="{{ showGrid }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;flex-direction:column;gap:12px">
+                <div style="display:flex;justify-content:space-between;align-items:baseline">
+                  <h6 style="margin:0;color:var(--color-neutral-500)">Plataformas</h6>
+                  <span style="font-size:11px;color:var(--color-neutral-600)">+1000 sitios</span>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px">
+                  <sc-for list="{{ platforms }}" as="p" hint-placeholder-count="9">
+                    <button onClick="{{ p.onClick }}" style="all:unset;cursor:pointer;display:flex;flex-direction:column;gap:10px;padding:14px 12px;border-radius:var(--radius-lg);background:{{ p.bg }};box-shadow:{{ p.shadow }}">
+                      <span style="width:34px;height:34px;border-radius:var(--radius-md);display:grid;place-items:center;font-size:12px;font-weight:600;letter-spacing:.02em;background:{{ p.monoBg }};color:{{ p.monoColor }}">{{ p.mono }}</span>
+                      <span style="font-size:13px;font-weight:500">{{ p.name }}</span>
+                    </button>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isOptions }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:12px 22px 120px;display:flex;flex-direction:column;gap:22px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <button class="btn btn-secondary btn-icon" onClick="{{ onBack }}" style="width:40px;height:40px;border-radius:20px">
+                <svg width="18" height="18" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"><path d="M160 208L80 128l80-80"></path></svg>
+              </button>
+              <span style="font-size:15px;font-weight:500">Opciones de descarga</span>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <div style="position:relative;aspect-ratio:16/9;border-radius:var(--radius-lg);background:linear-gradient(135deg, var(--color-neutral-800), var(--color-neutral-900));display:grid;place-items:center;overflow:hidden">
+                <div style="width:54px;height:54px;border-radius:27px;border:1px solid var(--color-accent);display:grid;place-items:center;color:var(--color-accent);box-shadow:0 0 30px color-mix(in srgb, var(--color-accent) 40%, transparent)">
+                  <svg width="20" height="20" viewBox="0 0 256 256" fill="currentColor"><path d="M88 52l120 76-120 76z"></path></svg>
+                </div>
+                <span class="tag tag-accent" style="position:absolute;left:10px;top:10px">{{ meta.platformName }}</span>
+                <span class="tag tag-neutral" style="position:absolute;right:10px;bottom:10px">{{ meta.duration }}</span>
+              </div>
+              <div>
+                <div style="font-size:17px;font-weight:500;line-height:1.3;text-wrap:pretty">{{ meta.title }}</div>
+                <div style="font-size:13px;color:var(--color-neutral-500);margin-top:4px">{{ meta.author }}</div>
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;padding:4px;border-radius:var(--radius-lg);background:var(--color-surface);gap:4px">
+              <sc-for list="{{ modes }}" as="m" hint-placeholder-count="2">
+                <button onClick="{{ m.onClick }}" style="all:unset;cursor:pointer;height:40px;display:flex;align-items:center;justify-content:center;gap:8px;border-radius:var(--radius-md);font-size:14px;font-weight:500;color:{{ m.color }};box-shadow:{{ m.shadow }}">{{ m.label }}</button>
+              </sc-for>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <h6 style="margin:0;color:var(--color-neutral-500)">Calidad</h6>
+              <div style="display:flex;flex-direction:column;border-radius:var(--radius-lg);background:var(--color-surface);overflow:hidden">
+                <sc-for list="{{ qualities }}" as="q" hint-placeholder-count="4">
+                  <button onClick="{{ q.onClick }}" style="all:unset;cursor:pointer;display:flex;align-items:center;gap:12px;padding:0 14px;min-height:50px;border-top:{{ q.divider }}">
+                    <span style="width:18px;height:18px;border-radius:9px;flex:none;border:1.5px solid {{ q.ring }};background:{{ q.dot }};box-shadow:inset 0 0 0 4px var(--color-surface)"></span>
+                    <span style="flex:1;font-size:14px">{{ q.label }}</span>
+                    <sc-if value="{{ q.hasNote }}" hint-placeholder-val="{{ false }}"><span class="tag tag-accent" style="padding:2px 8px;font-size:10px">{{ q.note }}</span></sc-if>
+                    <span style="font-size:13px;color:var(--color-neutral-500);min-width:56px;text-align:right">{{ q.size }}</span>
+                  </button>
+                </sc-for>
+              </div>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <h6 style="margin:0;color:var(--color-neutral-500)">Formato</h6>
+              <div style="display:flex;flex-wrap:wrap;gap:8px">
+                <sc-for list="{{ formats }}" as="f" hint-placeholder-count="3">
+                  <button onClick="{{ f.onClick }}" style="all:unset;cursor:pointer;height:36px;padding:0 16px;display:flex;align-items:center;border-radius:18px;font-size:13px;font-weight:500;border:1px solid {{ f.border }};color:{{ f.color }};background:{{ f.bg }}">{{ f.label }}</button>
+                </sc-for>
+              </div>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <h6 style="margin:0;color:var(--color-neutral-500)">Extras</h6>
+              <div style="display:flex;flex-direction:column;border-radius:var(--radius-lg);background:var(--color-surface);overflow:hidden">
+                <sc-for list="{{ extras }}" as="x" hint-placeholder-count="3">
+                  <button onClick="{{ x.onClick }}" style="all:unset;cursor:pointer;display:flex;align-items:center;gap:12px;padding:10px 14px;min-height:52px;border-top:{{ x.divider }}">
+                    <span style="flex:1;display:flex;flex-direction:column">
+                      <span style="font-size:14px">{{ x.label }}</span>
+                      <span style="font-size:12px;color:var(--color-neutral-500)">{{ x.hint }}</span>
+                    </span>
+                    <span style="position:relative;width:44px;height:26px;border-radius:13px;flex:none;background:{{ x.track }};transition:background .2s">
+                      <span style="position:absolute;top:3px;left:{{ x.knob }};width:20px;height:20px;border-radius:10px;background:var(--color-neutral-100);transition:left .2s"></span>
+                    </span>
+                  </button>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isDownloads }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:20px 22px 32px;display:flex;flex-direction:column;gap:24px">
+            <h2 style="font-size:28px;margin:0">Descargas</h2>
+
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <h6 style="margin:0;color:var(--color-neutral-500)">En curso · {{ activeCount }}</h6>
+              <sc-if value="{{ noActive }}" hint-placeholder-val="{{ false }}">
+                <div style="padding:22px 16px;border-radius:var(--radius-lg);border:1px dashed var(--color-neutral-800);font-size:13px;color:var(--color-neutral-500)">Nada descargándose. Pega un enlace en Inicio para empezar.</div>
+              </sc-if>
+              <sc-for list="{{ active }}" as="d" hint-placeholder-count="1">
+                <div class="card" style="padding:14px;gap:12px;border-radius:var(--radius-lg)">
+                  <div style="display:flex;gap:12px;align-items:center">
+                    <span style="width:44px;height:44px;flex:none;border-radius:var(--radius-md);background:var(--color-accent-900);color:var(--color-accent-300);display:grid;place-items:center;font-size:12px;font-weight:600">{{ d.mono }}</span>
+                    <div style="flex:1;min-width:0">
+                      <div style="font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ d.title }}</div>
+                      <div style="font-size:12px;color:var(--color-neutral-500)">{{ d.meta }}</div>
+                    </div>
+                    <button class="btn btn-secondary btn-icon" onClick="{{ d.onPause }}" style="width:36px;height:36px;border-radius:18px" aria-label="Pausar">
+                      <sc-if value="{{ d.paused }}" hint-placeholder-val="{{ false }}"><svg width="14" height="14" viewBox="0 0 256 256" fill="currentColor"><path d="M80 44l136 84-136 84z"></path></svg></sc-if>
+                      <sc-if value="{{ d.running }}" hint-placeholder-val="{{ true }}"><svg width="14" height="14" viewBox="0 0 256 256" fill="currentColor"><rect x="60" y="40" width="44" height="176" rx="8"></rect><rect x="152" y="40" width="44" height="176" rx="8"></rect></svg></sc-if>
+                    </button>
+                    <button class="btn btn-ghost btn-icon" onClick="{{ d.onCancel }}" style="width:36px;height:36px;color:var(--color-neutral-500)" aria-label="Cancelar">
+                      <svg width="16" height="16" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="18" stroke-linecap="round"><path d="M200 56L56 200M56 56l144 144"></path></svg>
+                    </button>
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:6px">
+                    <div style="height:4px;border-radius:2px;background:var(--color-neutral-800);overflow:hidden">
+                      <div style="height:100%;width:{{ d.pct }};border-radius:2px;background:var(--color-accent);box-shadow:0 0 10px var(--color-accent);transition:width .4s"></div>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--color-neutral-500)">
+                      <span>{{ d.pctLabel }}</span><span>{{ d.speed }}</span>
+                    </div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <h6 style="margin:0;color:var(--color-neutral-500)">Completadas</h6>
+              <div style="display:flex;flex-direction:column;gap:2px">
+                <sc-for list="{{ done }}" as="d" hint-placeholder-count="2">
+                  <div style="display:flex;gap:12px;align-items:center;padding:10px 0">
+                    <span style="width:44px;height:44px;flex:none;border-radius:var(--radius-md);background:var(--color-surface);color:var(--color-neutral-400);display:grid;place-items:center;font-size:12px;font-weight:600">{{ d.mono }}</span>
+                    <div style="flex:1;min-width:0">
+                      <div style="font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ d.title }}</div>
+                      <div style="font-size:12px;color:var(--color-neutral-500);display:flex;gap:6px;align-items:center">
+                        <svg width="12" height="12" viewBox="0 0 256 256" fill="none" stroke="var(--color-accent)" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"><path d="M40 136l56 56 120-120"></path></svg>{{ d.meta }}
+                      </div>
+                    </div>
+                    <button class="btn btn-ghost" onClick="{{ d.onOpen }}" style="height:36px;padding:0 10px">Abrir</button>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isSettings }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:20px 22px 32px;display:flex;flex-direction:column;gap:24px">
+            <h2 style="font-size:28px;margin:0">Ajustes</h2>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <h6 style="margin:0;color:var(--color-neutral-500)">Predeterminados</h6>
+              <div style="display:flex;flex-direction:column;border-radius:var(--radius-lg);background:var(--color-surface);overflow:hidden">
+                <sc-for list="{{ settingRows }}" as="s" hint-placeholder-count="3">
+                  <button onClick="{{ s.onClick }}" style="all:unset;cursor:pointer;display:flex;align-items:center;gap:12px;padding:0 14px;min-height:52px;border-top:{{ s.divider }}">
+                    <span style="flex:1;font-size:14px">{{ s.label }}</span>
+                    <span style="font-size:13px;color:var(--color-accent-300)">{{ s.value }}</span>
+                    <svg width="14" height="14" viewBox="0 0 256 256" fill="none" stroke="var(--color-neutral-600)" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"><path d="M96 48l80 80-80 80"></path></svg>
+                  </button>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <h6 style="margin:0;color:var(--color-neutral-500)">Red</h6>
+              <div style="display:flex;flex-direction:column;border-radius:var(--radius-lg);background:var(--color-surface);overflow:hidden">
+                <sc-for list="{{ settingToggles }}" as="x" hint-placeholder-count="2">
+                  <button onClick="{{ x.onClick }}" style="all:unset;cursor:pointer;display:flex;align-items:center;gap:12px;padding:10px 14px;min-height:52px;border-top:{{ x.divider }}">
+                    <span style="flex:1;display:flex;flex-direction:column">
+                      <span style="font-size:14px">{{ x.label }}</span>
+                      <span style="font-size:12px;color:var(--color-neutral-500)">{{ x.hint }}</span>
+                    </span>
+                    <span style="position:relative;width:44px;height:26px;border-radius:13px;flex:none;background:{{ x.track }};transition:background .2s">
+                      <span style="position:absolute;top:3px;left:{{ x.knob }};width:20px;height:20px;border-radius:10px;background:var(--color-neutral-100);transition:left .2s"></span>
+                    </span>
+                  </button>
+                </sc-for>
+                <div style="display:flex;align-items:center;gap:12px;padding:0 14px;min-height:52px;border-top:1px solid var(--color-neutral-800)">
+                  <span style="flex:1;font-size:14px">Descargas simultáneas</span>
+                  <button class="btn btn-secondary btn-icon" onClick="{{ decConc }}" style="width:32px;height:32px;border-radius:16px">−</button>
+                  <span style="width:20px;text-align:center;font-size:15px">{{ concurrent }}</span>
+                  <button class="btn btn-secondary btn-icon" onClick="{{ incConc }}" style="width:32px;height:32px;border-radius:16px">+</button>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <h6 style="margin:0;color:var(--color-neutral-500)">Motor</h6>
+              <div class="card" style="padding:14px;border-radius:var(--radius-lg);flex-direction:row;align-items:center;gap:12px">
+                <div style="flex:1">
+                  <div style="font-size:14px">yt-dlp {{ ytVersion }}</div>
+                  <div style="font-size:12px;color:var(--color-neutral-500)">{{ ytStatus }}</div>
+                </div>
+                <button class="btn btn-primary" onClick="{{ onUpdate }}" style="height:36px">{{ updateLabel }}</button>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+
+      <sc-if value="{{ isOptions }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;left:0;right:0;bottom:84px;padding:14px 22px;background:linear-gradient(to top, var(--color-bg) 70%, transparent)">
+          <button class="btn btn-primary" onClick="{{ onDownload }}" style="width:100%;height:54px;border-radius:var(--radius-lg);justify-content:space-between;padding:0 18px;background:var(--color-bg);box-shadow:0 0 28px color-mix(in srgb, var(--color-accent) 30%, transparent)">
+            <span style="display:flex;align-items:center;gap:10px;font-size:15px">
+              <svg width="18" height="18" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"><path d="M128 40v112"></path><path d="M84 112l44 44 44-44"></path><path d="M48 200h160"></path></svg>
+              Descargar
+            </span>
+            <span style="font-size:13px;color:var(--color-accent-300)">{{ summary }}</span>
+          </button>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;left:22px;right:22px;bottom:100px;padding:12px 14px;border-radius:var(--radius-lg);background:var(--color-surface);box-shadow:var(--shadow-md);font-size:13px;display:flex;align-items:center;gap:10px;z-index:6">
+          <span style="width:6px;height:6px;border-radius:3px;background:var(--color-accent);box-shadow:0 0 8px var(--color-accent)"></span>{{ toast }}
+        </div>
+      </sc-if>
+
+      <div style="position:absolute;left:0;right:0;bottom:0;height:84px;padding:8px 18px 0;display:grid;grid-template-columns:repeat(3,1fr);background:color-mix(in srgb, var(--color-bg) 92%, transparent);backdrop-filter:blur(12px)">
+        <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(to right, transparent, var(--color-neutral-800) 48px, var(--color-neutral-800) calc(100% - 48px), transparent)"></div>
+        <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="3">
+          <button onClick="{{ t.onClick }}" style="all:unset;cursor:pointer;position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding-top:6px;height:48px;color:{{ t.color }}">
+            <sc-if value="{{ t.isHome }}" hint-placeholder-val="{{ false }}"><svg width="24" height="24" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linejoin="round"><path d="M40 216V116l88-76 88 76v100h-60v-60h-56v60z"></path></svg></sc-if>
+            <sc-if value="{{ t.isDl }}" hint-placeholder-val="{{ false }}"><svg width="24" height="24" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"><path d="M128 32v112"></path><path d="M84 100l44 44 44-44"></path><path d="M40 152v56h176v-56"></path></svg></sc-if>
+            <sc-if value="{{ t.isSet }}" hint-placeholder-val="{{ false }}"><svg width="24" height="24" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round"><path d="M40 80h56M144 80h72M40 176h104M192 176h24"></path><circle cx="120" cy="80" r="24"></circle><circle cx="168" cy="176" r="24"></circle></svg></sc-if>
+            <span style="font-size:10px;font-weight:500">{{ t.label }}</span>
+            <sc-if value="{{ t.hasBadge }}" hint-placeholder-val="{{ false }}">
+              <span style="position:absolute;top:0;left:calc(50% + 8px);min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--color-accent);color:var(--color-bg);font-size:10px;font-weight:600;display:grid;place-items:center">{{ t.badge }}</span>
+            </sc-if>
+          </button>
+        </sc-for>
+        <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:var(--color-neutral-300)"></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="max-width:340px;display:flex;flex-direction:column;gap:14px;padding-top:24px">
+    <span class="card-kicker">Prototipo · Nocturne</span>
+    <h3 style="margin:0">Clipo — frontend para yt-dlp</h3>
+    <p style="margin:0;font-size:14px;color:var(--color-neutral-400)">Pulsa <b>Pegar</b> para cargar un enlace de ejemplo, o toca una plataforma. La app detecta la fuente sola; la cuadrícula es un atajo.</p>
+    <div style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--color-neutral-400)">
+      <span>1 · Inicio: pegar enlace + plataformas</span>
+      <span>2 · Opciones: video/audio, calidad, formato, extras</span>
+      <span>3 · Descargas: progreso en vivo, pausar, cancelar</span>
+      <span>4 · Ajustes: predeterminados, red, versión de yt-dlp</span>
+    </div>
+    <p style="margin:0;font-size:12px;color:var(--color-neutral-600)">Supuestos: iOS, interfaz en español, logos de marca sustituidos por monogramas.</p>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;showPlatformGrid&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;startScreen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;home&quot;,&quot;options&quot;,&quot;downloads&quot;],&quot;default&quot;:&quot;home&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+const PLATFORMS = [
+  { id: 'youtube', name: 'YouTube', mono: 'YT', re: /youtu\.?be/, sample: 'https://youtu.be/dQx7Lm2Kp9A', ph: 'youtube.com/watch?v=…' },
+  { id: 'instagram', name: 'Instagram', mono: 'IG', re: /instagram|instagr\.am/, sample: 'https://www.instagram.com/reel/C8kPz1sLq/', ph: 'instagram.com/reel/…' },
+  { id: 'facebook', name: 'Facebook', mono: 'FB', re: /facebook|fb\.watch/, sample: 'https://fb.watch/q2Lk9vN0/', ph: 'fb.watch/…' },
+  { id: 'tiktok', name: 'TikTok', mono: 'TT', re: /tiktok/, sample: 'https://www.tiktok.com/@cocina.rapida/video/73912', ph: 'tiktok.com/@usuario/video/…' },
+  { id: 'x', name: 'X', mono: 'X', re: /(^|\/\/|\.)(x|twitter)\.com/, sample: 'https://x.com/nasa/status/18233', ph: 'x.com/usuario/status/…' },
+  { id: 'vimeo', name: 'Vimeo', mono: 'VI', re: /vimeo/, sample: 'https://vimeo.com/824155', ph: 'vimeo.com/…' },
+  { id: 'reddit', name: 'Reddit', mono: 'RD', re: /reddit|redd\.it/, sample: 'https://www.reddit.com/r/videos/comments/1f2x', ph: 'reddit.com/r/…' },
+  { id: 'soundcloud', name: 'SoundCloud', mono: 'SC', re: /soundcloud/, sample: 'https://soundcloud.com/artista/tema', ph: 'soundcloud.com/…' },
+  { id: 'other', name: 'Otros', mono: '+', re: null, sample: 'https://www.twitch.tv/videos/21933', ph: 'Cualquier enlace compatible' },
+];
+const META = {
+  youtube: { title: 'Cómo hacer pan de masa madre en casa — guía completa', author: 'Hornea Conmigo · 1,2 M vistas', duration: '18:42', mb: 1 },
+  instagram: { title: 'Atardecer en Valle de Bravo 🌅', author: '@viajes.mx · Reel', duration: '0:34', mb: 0.05 },
+  facebook: { title: 'Resumen del partido: goles y mejores jugadas', author: 'Deportes Hoy', duration: '4:12', mb: 0.25 },
+  tiktok: { title: 'Tacos al pastor en 60 segundos', author: '@cocina.rapida', duration: '0:58', mb: 0.07 },
+  x: { title: 'Lanzamiento visto desde la estación', author: '@nasa', duration: '1:20', mb: 0.1 },
+  vimeo: { title: 'Cortometraje: La última estación', author: 'Estudio Ámbar', duration: '12:05', mb: 0.7 },
+  reddit: { title: 'Mi gato aprendió a abrir la puerta', author: 'r/videos', duration: '0:45', mb: 0.05 },
+  soundcloud: { title: 'Sesión en vivo — Noches de Jazz', author: 'Trío Nocturno', duration: '42:10', mb: 0 },
+  other: { title: 'Directo: maratón de diseño', author: 'twitch.tv', duration: '2:14:00', mb: 3 },
+};
+const VQ = [
+  { id: '2160', label: '2160p · 4K', base: 1450 },
+  { id: '1080', label: '1080p · Full HD', base: 420, note: 'Recomendado' },
+  { id: '720', label: '720p · HD', base: 190 },
+  { id: '480', label: '480p', base: 95 },
+  { id: '360', label: '360p', base: 52 },
+];
+const AQ = [
+  { id: '320', label: '320 kbps', base: 44, note: 'Máxima' },
+  { id: '192', label: '192 kbps', base: 26 },
+  { id: '128', label: '128 kbps', base: 17 },
+];
+const VF = ['MP4', 'WEBM', 'MKV'];
+const AF = ['MP3', 'M4A', 'OPUS', 'FLAC'];
+
+class Component extends DCLogic {
+  state = {
+    tab: 'home', view: 'home', url: '', platform: null, analyzing: false, sampleIdx: 0,
+    mode: 'video', quality: '1080', format: 'MP4',
+    extras: { subs: false, thumb: true, meta: true },
+    wifiOnly: true, bgDl: true, concurrent: 3, updating: false, updated: false,
+    queue: [
+      { id: 1, mono: 'YT', title: 'Lo-fi para estudiar — 3 horas', spec: '320 kbps · MP3', size: 412, progress: 100, status: 'done' },
+      { id: 2, mono: 'TT', title: 'Receta de chilaquiles verdes', spec: '1080p · MP4', size: 38, progress: 100, status: 'done' },
+    ],
+    toast: null,
+  };
+
+  componentDidMount() {
+    if (this.props.startScreen === 'options') this.analyze(PLATFORMS[0].sample, true);
+    if (this.props.startScreen === 'downloads') this.setState({ tab: 'downloads' });
+    this.timer = setInterval(() => {
+      if (!this.state.queue.some(q => q.status === 'running')) return;
+      this.setState(s => ({ queue: s.queue.map(q => {
+        if (q.status !== 'running') return q;
+        const p = Math.min(100, q.progress + 2 + Math.random() * 5);
+        return { ...q, progress: p, speed: (2 + Math.random() * 4).toFixed(1), status: p >= 100 ? 'done' : 'running' };
+      }) }));
+    }, 450);
+  }
+  componentWillUnmount() { clearInterval(this.timer); clearTimeout(this.tt); }
+
+  detect(url) {
+    if (!url) return null;
+    const p = PLATFORMS.find(p => p.re && p.re.test(url.toLowerCase()));
+    return p ? p.id : 'other';
+  }
+  flash(msg) { clearTimeout(this.tt); this.setState({ toast: msg }); this.tt = setTimeout(() => this.setState({ toast: null }), 2200); }
+  analyze(url, instant) {
+    const platform = this.detect(url);
+    const go = () => this.setState({ analyzing: false, view: 'options', mode: platform === 'soundcloud' ? 'audio' : 'video', quality: platform === 'soundcloud' ? '320' : '1080', format: platform === 'soundcloud' ? 'MP3' : 'MP4' });
+    this.setState({ url, platform, analyzing: !instant });
+    if (instant) go(); else setTimeout(go, 1100);
+  }
+  sizeOf(base) {
+    const m = META[this.state.platform || 'youtube'].mb;
+    const v = this.state.mode === 'audio' ? base * Math.max(m, 0.4) : base * m;
+    return v >= 1000 ? (v / 1000).toFixed(1) + ' GB' : Math.max(1, Math.round(v)) + ' MB';
+  }
+
+  renderVals() {
+    const s = this.state;
+    const screen = s.tab === 'home' ? s.view : s.tab;
+    const pl = PLATFORMS.find(p => p.id === s.platform);
+    const meta = { ...META[s.platform || 'youtube'], platformName: pl ? pl.name : 'YouTube' };
+    const qs = s.mode === 'video' ? VQ : AQ;
+    const fs = s.mode === 'video' ? VF : AF;
+    const qSel = qs.find(q => q.id === s.quality) || qs[0];
+    const active = s.queue.filter(q => q.status !== 'done');
+    const div = i => i === 0 ? 'none' : '1px solid var(--color-neutral-800)';
+    const toggle = (on, i, label, hint, onClick) => ({ label, hint, onClick, divider: div(i), track: on ? 'var(--color-accent-600)' : 'var(--color-neutral-800)', knob: on ? '21px' : '3px' });
+    const ACC = 'var(--color-accent)';
+
+    return {
+      glow: ({ youtube: 'oklch(0.36 0.12 25)', instagram: 'oklch(0.36 0.12 350)', facebook: 'oklch(0.36 0.11 262)', tiktok: 'oklch(0.36 0.08 195)', x: 'oklch(0.34 0.015 270)', vimeo: 'oklch(0.36 0.09 225)', reddit: 'oklch(0.37 0.12 40)', soundcloud: 'oklch(0.38 0.12 55)', other: 'var(--color-accent-900)', none: 'var(--color-accent-900)' })[screen === 'home' && s.platform ? s.platform : 'none'],
+      isHome: screen === 'home', isOptions: screen === 'options', isDownloads: screen === 'downloads', isSettings: screen === 'settings',
+      showGrid: this.props.showPlatformGrid ?? true,
+      url: s.url,
+      placeholder: pl ? pl.ph : 'Pega un enlace de video',
+      onUrl: e => { const url = e.target.value; this.setState({ url, platform: this.detect(url) }); },
+      onPaste: () => {
+        const p = s.platform && s.platform !== 'other' && !s.url ? PLATFORMS.find(x => x.id === s.platform) : PLATFORMS[s.sampleIdx % PLATFORMS.length];
+        this.setState({ url: p.sample, platform: this.detect(p.sample), sampleIdx: s.sampleIdx + 1 });
+      },
+      detected: !!s.url && !!pl, detectedName: pl ? (pl.id === 'other' ? 'Sitio compatible con yt-dlp' : pl.name) : '',
+      cantAnalyze: !s.url || s.analyzing,
+      analyzing: s.analyzing, analyzeLabel: s.analyzing ? 'Analizando enlace…' : 'Analizar enlace',
+      onAnalyze: () => this.analyze(s.url),
+      platforms: PLATFORMS.map(p => {
+        const on = s.platform === p.id;
+        return { ...p, onClick: () => this.setState({ platform: p.id, url: s.url && this.detect(s.url) === p.id ? s.url : '' }),
+          bg: on ? 'color-mix(in srgb, var(--color-accent) 10%, var(--color-surface))' : 'var(--color-surface)',
+          shadow: on ? '0 0 0 1px ' + ACC + ', 0 0 20px color-mix(in srgb, var(--color-accent) 25%, transparent)' : 'none',
+          monoBg: on ? 'var(--color-accent-800)' : 'var(--color-neutral-900)',
+          monoColor: on ? 'var(--color-accent-200)' : 'var(--color-neutral-400)' };
+      }),
+      onBack: () => this.setState({ view: 'home' }),
+      meta,
+      modes: [['video', 'Video'], ['audio', 'Solo audio']].map(([id, label]) => ({ label,
+        color: s.mode === id ? ACC : 'var(--color-neutral-400)',
+        shadow: s.mode === id ? 'inset 0 0 0 1px ' + ACC : 'none',
+        onClick: () => this.setState({ mode: id, quality: id === 'video' ? '1080' : '320', format: id === 'video' ? 'MP4' : 'MP3' }) })),
+      qualities: qs.map((q, i) => ({ label: q.label, size: this.sizeOf(q.base), hasNote: !!q.note, note: q.note, divider: div(i),
+        ring: q.id === qSel.id ? ACC : 'var(--color-neutral-700)', dot: q.id === qSel.id ? ACC : 'transparent',
+        onClick: () => this.setState({ quality: q.id }) })),
+      formats: fs.map(f => { const on = s.format === f; return { label: f,
+        border: on ? ACC : 'var(--color-neutral-800)', color: on ? 'var(--color-accent-200)' : 'var(--color-neutral-400)',
+        bg: on ? 'var(--color-accent-900)' : 'transparent', onClick: () => this.setState({ format: f }) }; }),
+      extras: [
+        ['subs', 'Subtítulos', 'Incrustar si están disponibles'],
+        ['thumb', 'Miniatura', 'Guardar como portada'],
+        ['meta', 'Metadatos', 'Título, autor y fecha'],
+      ].map(([k, l, h], i) => toggle(s.extras[k], i, l, h, () => this.setState(st => ({ extras: { ...st.extras, [k]: !st.extras[k] } })))),
+      summary: (s.mode === 'video' ? s.quality + 'p' : s.quality + ' kbps') + ' · ' + s.format + ' · ' + this.sizeOf(qSel.base),
+      onDownload: () => {
+        const item = { id: Date.now(), mono: pl ? pl.mono : 'YT', title: meta.title,
+          spec: (s.mode === 'video' ? s.quality + 'p' : s.quality + ' kbps') + ' · ' + s.format,
+          size: parseFloat(this.sizeOf(qSel.base)) * (this.sizeOf(qSel.base).includes('GB') ? 1000 : 1), progress: 0, status: 'running', speed: '0.0' };
+        this.setState(st => ({ queue: [item, ...st.queue], tab: 'downloads', view: 'home', url: '', platform: null }));
+        this.flash('Añadido a la cola de descargas');
+      },
+      activeCount: active.length, noActive: active.length === 0,
+      active: active.map(q => ({ ...q, paused: q.status === 'paused', running: q.status === 'running',
+        pct: Math.round(q.progress) + '%',
+        pctLabel: Math.round(q.progress) + '% · ' + Math.round(q.size * q.progress / 100) + ' de ' + Math.round(q.size) + ' MB',
+        speed: q.status === 'paused' ? 'En pausa' : q.speed + ' MB/s',
+        meta: q.spec,
+        onPause: () => this.setState(st => ({ queue: st.queue.map(x => x.id === q.id ? { ...x, status: x.status === 'paused' ? 'running' : 'paused' } : x) })),
+        onCancel: () => { this.setState(st => ({ queue: st.queue.filter(x => x.id !== q.id) })); this.flash('Descarga cancelada'); } })),
+      done: s.queue.filter(q => q.status === 'done').map(q => ({ ...q,
+        meta: q.spec + ' · ' + (q.size >= 1000 ? (q.size / 1000).toFixed(1) + ' GB' : Math.round(q.size) + ' MB'),
+        onOpen: () => this.flash('Abriendo en Archivos…') })),
+      settingRows: [
+        ['Carpeta de destino', 'Archivos › Clipo'],
+        ['Calidad de video', '1080p'],
+        ['Formato de audio', 'MP3'],
+        ['Nombre de archivo', '%(title)s'],
+      ].map(([label, value], i) => ({ label, value, divider: div(i), onClick: () => this.flash(label + ': próximamente') })),
+      settingToggles: [
+        toggle(s.wifiOnly, 0, 'Solo con Wi-Fi', 'Pausa las descargas con datos móviles', () => this.setState({ wifiOnly: !s.wifiOnly })),
+        toggle(s.bgDl, 1, 'Descargar en segundo plano', 'Continúa aunque cierres la app', () => this.setState({ bgDl: !s.bgDl })),
+      ],
+      concurrent: s.concurrent,
+      decConc: () => this.setState({ concurrent: Math.max(1, s.concurrent - 1) }),
+      incConc: () => this.setState({ concurrent: Math.min(6, s.concurrent + 1) }),
+      ytVersion: s.updated ? '2026.09.27' : '2026.09.12',
+      ytStatus: s.updating ? 'Actualizando…' : s.updated ? 'Estás al día' : 'Hay una versión nueva disponible',
+      updateLabel: s.updated ? 'Al día' : s.updating ? '…' : 'Actualizar',
+      onUpdate: () => { if (s.updated || s.updating) return; this.setState({ updating: true }); setTimeout(() => { this.setState({ updating: false, updated: true }); this.flash('yt-dlp actualizado'); }, 1400); },
+      hasToast: !!s.toast, toast: s.toast,
+      tabs: [['home', 'Inicio'], ['downloads', 'Descargas'], ['settings', 'Ajustes']].map(([id, label]) => ({ label,
+        isHome: id === 'home', isDl: id === 'downloads', isSet: id === 'settings',
+        color: s.tab === id ? ACC : 'var(--color-neutral-500)',
+        hasBadge: id === 'downloads' && active.length > 0, badge: active.length,
+        onClick: () => this.setState({ tab: id, view: id === 'home' && s.tab === 'home' ? 'home' : s.view }) })),
+    };
+  }
+}
+</script>
+</body>
+</html>
