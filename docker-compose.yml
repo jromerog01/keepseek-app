@@ -1,0 +1,34 @@
+services:
+  clipo:
+    build:
+      context: .
+      args:
+        YTDLP_CACHE_BUST: ${YTDLP_CACHE_BUST:-dev}
+    image: clipo:latest
+    container_name: clipo
+    restart: unless-stopped
+    user: "${CLIPO_UID:-1000}:${CLIPO_GID:-1000}"
+    stop_grace_period: 30s
+    environment:
+      API_TOKEN: ${API_TOKEN:?Define API_TOKEN en .env}
+      SECRET_KEY: ${SECRET_KEY:?Define SECRET_KEY en .env}
+      FILE_TTL_HOURS: ${FILE_TTL_HOURS:-6}
+      MAX_CONCURRENT: ${MAX_CONCURRENT:-2}
+      SECURE_COOKIES: ${SECURE_COOKIES:-true}
+    volumes:
+      - ./data:/data
+    ports:
+      - "127.0.0.1:8000:8000"
+
+  # Se activa con COMPOSE_PROFILES=tunnel en .env
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: clipo-tunnel
+    restart: unless-stopped
+    profiles: ["tunnel"]
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:-}
+    depends_on:
+      clipo:
+        condition: service_healthy
