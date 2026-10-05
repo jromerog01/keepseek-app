@@ -1,7 +1,8 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { api } from '../api/client.js'
-import { fileName } from '../lib/format.js'
+import { readBody } from '../lib/download.js'
+import { fileName, fmtBytes } from '../lib/format.js'
 import { useClipo } from '../store/useClipo.js'
 import Icon from './Icon.vue'
 
@@ -10,7 +11,14 @@ const { flash } = useClipo()
 
 const LARGE_FILE_BYTES = 300e6
 const phase = ref('idle')
+const progress = ref({ received: 0, total: 0 })
 let file = null
+
+const preparingLabel = computed(() => {
+  const { received, total } = progress.value
+  if (total > 0) return `Descargando ${Math.min(99, Math.round((received / total) * 100))} % · ${fmtBytes(received)} de ${fmtBytes(total)}`
+  return received > 0 ? `Descargando ${fmtBytes(received)}` : 'Preparando archivo…'
+})
 
 watch(() => props.job.id, () => {
   phase.value = 'idle'
@@ -32,9 +40,10 @@ async function prepare() {
   }
   phase.value = 'preparing'
   try {
+    progress.value = { received: 0, total: props.job.size_bytes || 0 }
     const response = await fetch(api.fileUrl(props.job.id), { credentials: 'same-origin' })
     if (!response.ok) throw new Error('descarga fallida')
-    const blob = await response.blob()
+    const blob = await readBody(response, (p) => { progress.value = p }, props.job.size_bytes || 0)
     file = new File([blob], fileName(props.job), { type: blob.type })
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       phase.value = 'ready'
@@ -74,7 +83,7 @@ const onTap = () => (phase.value === 'ready' ? share() : prepare())
       style="width:16px;height:16px;border-radius:8px;border:2px solid var(--color-accent-800);border-top-color:var(--color-accent);animation:spin .8s linear infinite"
     ></span>
     <Icon v-else :name="phase === 'ready' ? 'share' : 'download'" :size="18" />
-    <template v-if="phase === 'preparing'">Preparando archivo…</template>
+    <template v-if="phase === 'preparing'">{{ preparingLabel }}</template>
     <template v-else-if="phase === 'ready'">Guardar en iPhone</template>
     <template v-else-if="phase === 'error'">Reintentar</template>
     <template v-else>Preparar archivo</template>
