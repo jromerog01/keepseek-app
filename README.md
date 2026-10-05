@@ -53,7 +53,9 @@ Como queda expuesto a internet, usa un `API_TOKEN` largo y aleatorio. Todas las 
 
 1. Abre `https://clipo.jromerog.dev` en **Safari**.
 2. Compartir → **Agregar a pantalla de inicio**.
-3. Para descargar un video al teléfono: en el detalle de una descarga terminada toca **Preparar archivo** y luego **Guardar en iPhone** (iOS exige dos toques) → *Guardar video*.
+3. Para llevar un video al teléfono: en el detalle de una descarga terminada toca **Descargar archivo**. Es una descarga directa desde el servidor (no ocupa memoria del teléfono, sirve con archivos grandes) y queda en *Archivos › Descargas*; desde ahí, ábrelo → Compartir → **Guardar video** para pasarlo a Fotos.
+   - El botón secundario **Compartir o guardar en Fotos** usa el menú de compartir de iOS (dos toques: prepara el archivo y luego lo abre). Es más cómodo para videos chicos, pero algunos iPhone lo rechazan.
+   - Para guardar directo en Fotos sin pasos extra, usa el **Atajo** (`docs/atajo-ios.md`).
 
 ## Atajo de iOS
 

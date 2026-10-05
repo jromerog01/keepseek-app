@@ -14,42 +14,41 @@ const phase = ref('idle')
 const progress = ref({ received: 0, total: 0 })
 let file = null
 
-const preparingLabel = computed(() => {
-  const { received, total } = progress.value
-  if (total > 0) return `Descargando ${Math.min(99, Math.round((received / total) * 100))} % · ${fmtBytes(received)} de ${fmtBytes(total)}`
-  return received > 0 ? `Descargando ${fmtBytes(received)}` : 'Preparando archivo…'
-})
+const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+const canShareFiles = typeof navigator.canShare === 'function' && typeof navigator.share === 'function'
+
+const downloadUrl = computed(() => api.fileUrl(props.job.id))
+const downloadName = computed(() => fileName(props.job))
 
 watch(() => props.job.id, () => {
   phase.value = 'idle'
   file = null
 })
 
-function downloadWithLink(blob) {
-  const link = document.createElement('a')
-  link.href = URL.createObjectURL(blob)
-  link.download = fileName(props.job)
-  link.click()
-  setTimeout(() => URL.revokeObjectURL(link.href), 10000)
-}
+const preparingLabel = computed(() => {
+  const { received, total } = progress.value
+  if (total > 0) return `Descargando ${Math.min(99, Math.round((received / total) * 100))} % · ${fmtBytes(received)} de ${fmtBytes(total)}`
+  return received > 0 ? `Descargando ${fmtBytes(received)}` : 'Preparando archivo…'
+})
 
-async function prepare() {
+async function prepareShare() {
   if (props.job.size_bytes > LARGE_FILE_BYTES) {
-    window.location.href = api.fileUrl(props.job.id)
+    flash('El archivo es grande: usa "Descargar archivo"')
     return
   }
   phase.value = 'preparing'
   try {
     progress.value = { received: 0, total: props.job.size_bytes || 0 }
-    const response = await fetch(api.fileUrl(props.job.id), { credentials: 'same-origin' })
+    const response = await fetch(downloadUrl.value, { credentials: 'same-origin' })
     if (!response.ok) throw new Error('descarga fallida')
     const blob = await readBody(response, (p) => { progress.value = p }, props.job.size_bytes || 0)
-    file = new File([blob], fileName(props.job), { type: blob.type })
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    file = new File([blob], downloadName.value, { type: blob.type })
+    if (navigator.canShare({ files: [file] })) {
       phase.value = 'ready'
     } else {
-      downloadWithLink(blob)
       phase.value = 'idle'
+      flash('Este dispositivo no permite compartir el archivo: usa "Descargar archivo"')
     }
   } catch {
     phase.value = 'error'
@@ -63,29 +62,45 @@ async function share() {
   } catch (error) {
     if (error.name === 'AbortError') return
     console.error('navigator.share falló:', error)
-    downloadWithLink(file)
-    flash(`No se abrió el menú de compartir (${error.name}); se descargó el archivo`)
+    flash(`No se abrió el menú de compartir (${error.name}). Usa "Descargar archivo".`)
   }
 }
 
-const onTap = () => (phase.value === 'ready' ? share() : prepare())
+const onShareTap = () => (phase.value === 'ready' ? share() : prepareShare())
 </script>
 
 <template>
-  <button
-    class="btn btn-primary"
-    :disabled="phase === 'preparing'"
-    style="height:52px;border-radius:var(--radius-lg);width:100%;gap:10px;font-size:15px;box-shadow:0 0 24px color-mix(in srgb, var(--color-accent) 22%, transparent)"
-    @click="onTap"
-  >
-    <span
-      v-if="phase === 'preparing'"
-      style="width:16px;height:16px;border-radius:8px;border:2px solid var(--color-accent-800);border-top-color:var(--color-accent);animation:spin .8s linear infinite"
-    ></span>
-    <Icon v-else :name="phase === 'ready' ? 'share' : 'download'" :size="18" />
-    <template v-if="phase === 'preparing'">{{ preparingLabel }}</template>
-    <template v-else-if="phase === 'ready'">Guardar en iPhone</template>
-    <template v-else-if="phase === 'error'">Reintentar</template>
-    <template v-else>Preparar archivo</template>
-  </button>
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <a
+      :href="downloadUrl"
+      :download="downloadName"
+      class="btn btn-primary"
+      style="height:52px;border-radius:var(--radius-lg);width:100%;gap:10px;font-size:15px;box-shadow:0 0 24px color-mix(in srgb, var(--color-accent) 22%, transparent)"
+    >
+      <Icon name="download" :size="18" />
+      Descargar archivo
+    </a>
+
+    <p v-if="isIos" style="margin:0;font-size:12px;color:var(--color-neutral-500);text-wrap:pretty">
+      En iPhone se guarda en Archivos › Descargas. Para llevarlo a Fotos: ábrelo, toca Compartir y elige Guardar video.
+    </p>
+
+    <button
+      v-if="canShareFiles"
+      class="btn btn-secondary"
+      :disabled="phase === 'preparing'"
+      style="height:44px;border-radius:var(--radius-lg);width:100%;gap:10px;font-size:14px"
+      @click="onShareTap"
+    >
+      <span
+        v-if="phase === 'preparing'"
+        style="width:14px;height:14px;border-radius:7px;border:2px solid var(--color-accent-800);border-top-color:var(--color-accent);animation:spin .8s linear infinite"
+      ></span>
+      <Icon v-else name="share" :size="16" />
+      <template v-if="phase === 'preparing'">{{ preparingLabel }}</template>
+      <template v-else-if="phase === 'ready'">Abrir menú de compartir</template>
+      <template v-else-if="phase === 'error'">Reintentar compartir</template>
+      <template v-else>Compartir o guardar en Fotos</template>
+    </button>
+  </div>
 </template>
