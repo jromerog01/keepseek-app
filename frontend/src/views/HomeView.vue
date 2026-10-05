@@ -33,7 +33,7 @@ const monoStyle = (id) => {
         <span style="font-size:18px;font-weight:500">Clipo</span>
       </div>
       <div style="display:flex;align-items:center;gap:8px">
-        <span class="tag tag-neutral">{{ ytdlpTag }}</span>
+        <a class="tag tag-neutral" href="/diag.html" style="text-decoration:none">{{ ytdlpTag }}</a>
         <button
           class="btn btn-secondary btn-icon"
           :aria-label="state.theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
