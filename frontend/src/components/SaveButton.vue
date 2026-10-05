@@ -52,7 +52,10 @@ async function share() {
   try {
     await navigator.share({ files: [file] })
   } catch (error) {
-    if (error.name !== 'AbortError') flash('No se pudo abrir el menú de compartir')
+    if (error.name === 'AbortError') return
+    console.error('navigator.share falló:', error)
+    downloadWithLink(file)
+    flash(`No se abrió el menú de compartir (${error.name}); se descargó el archivo`)
   }
 }
 
