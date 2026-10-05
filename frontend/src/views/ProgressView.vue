@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue'
-import { etaLabel, sizeLabel, stagesFor, statusLabel } from '../lib/format.js'
+import { etaLabel, sizeLabel, stageRows, statusLabel } from '../lib/format.js'
 import { T } from '../lib/styles.js'
 import { useClipo } from '../store/useClipo.js'
 import Icon from '../components/Icon.vue'
@@ -10,7 +10,7 @@ const { detail: job, closeDetail, togglePause, cancel, retry, newDownload } = us
 
 const pct = computed(() => Math.round(job.value.progress) + '%')
 const inProgress = computed(() => ['waiting', 'running', 'paused'].includes(job.value.status))
-const stages = computed(() => stagesFor(job.value).map((g) => ({ label: g.label, ...T.stage[g.state] })))
+const stages = computed(() => stageRows(job.value).map((g) => ({ ...g, ...T.stage[g.state] })))
 const headerTitle = computed(() => {
   if (job.value.status === 'error') return 'Error en la descarga'
   return job.value.status === 'done' || job.value.status === 'expired' ? 'Descarga' : 'Descargando'
@@ -61,12 +61,22 @@ const headerTitle = computed(() => {
       </div>
     </div>
 
-    <div style="display:flex;flex-direction:column;gap:14px;padding-left:4px">
-      <div v-for="g in stages" :key="g.label" :style="{ color: g.color }" style="display:flex;align-items:center;gap:12px;font-size:14px">
+    <div style="display:flex;flex-direction:column;gap:16px;padding-left:4px">
+      <div v-for="g in stages" :key="g.label" :style="{ color: g.color }" style="display:flex;align-items:flex-start;gap:12px;font-size:14px">
         <span
           :style="{ background: g.dot, border: '1.5px solid ' + g.ring, boxShadow: g.glow }"
-          style="width:10px;height:10px;border-radius:5px;flex:none"
-        ></span>{{ g.label }}
+          style="width:10px;height:10px;border-radius:5px;flex:none;margin-top:5px"
+        ></span>
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px">
+          <span>{{ g.label }}</span>
+          <div
+            v-if="g.state === 'active' && g.pct != null"
+            style="height:3px;border-radius:2px;background:var(--color-neutral-800);overflow:hidden"
+          >
+            <div :style="{ width: Math.round(g.pct) + '%' }" style="height:100%;border-radius:2px;background:var(--color-accent);box-shadow:0 0 8px var(--color-accent);transition:width .4s"></div>
+          </div>
+        </div>
+        <span style="font-size:13px;font-variant-numeric:tabular-nums;flex:none;min-width:58px;text-align:right">{{ g.detail }}</span>
       </div>
     </div>
 

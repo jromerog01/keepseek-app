@@ -146,7 +146,7 @@ const modeDisabled = (id) => id === 'video' && state.analysis?.audio_only
         >{{ f }}</button>
       </div>
       <p v-if="showHdNote" style="margin:0;font-size:12px;color:var(--color-neutral-500)">
-        YouTube no ofrece 4K en H.264. Para que Fotos lo acepte, Clipo lo convierte al terminar y tarda más. Con 1080p no hace falta.
+        YouTube no ofrece 4K en H.264. Clipo baja el 4K real y lo convierte al terminar para que Fotos lo acepte: tarda más y el archivo final pesa más que el estimado. Con 1080p no hace falta.
       </p>
     </div>
   </div>

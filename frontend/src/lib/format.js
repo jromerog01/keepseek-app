@@ -44,15 +44,39 @@ export function sizeLabel(job) {
   return fmtBytes(job.downloaded_bytes)
 }
 
+const clamp = (value) => Math.max(0, Math.min(100, value))
+
+// Etapas de respaldo para jobs sin detalle en vivo (por ejemplo, tras reiniciar el servidor)
 export function stagesFor(job) {
   const p = job.progress
   const list = job.mode === 'audio'
     ? [['Extrayendo información', 0, 8], ['Descargando audio', 8, 85], ['Convirtiendo', 85, 100]]
-    : [['Extrayendo información', 0, 8], ['Descargando video', 8, 70], ['Descargando audio', 70, 90], ['Uniendo con ffmpeg', 90, 100]]
-  return list.map(([label, from, to]) => ({
-    label,
-    state: p >= to || job.status === 'done' ? 'done' : p >= from && job.status !== 'waiting' ? 'active' : 'pending',
-  }))
+    : [['Extrayendo información', 0, 8], ['Descargando video', 8, 70], ['Descargando audio', 70, 90], ['Uniendo audio y video', 90, 100]]
+  return list.map(([label, from, to]) => {
+    const state = p >= to || job.status === 'done' ? 'done' : p >= from && job.status !== 'waiting' ? 'active' : 'pending'
+    return { label, state, pct: state === 'done' ? 100 : state === 'active' ? clamp(((p - from) / (to - from)) * 100) : 0 }
+  })
+}
+
+export function stageDetail(stage) {
+  if (stage.state === 'done') return '100 %'
+  if (stage.state === 'pending') return '—'
+  return stage.pct == null ? 'En curso' : `${Math.round(stage.pct)} %`
+}
+
+// Lo que se muestra en la pantalla de descarga: cada etapa con su estado y su porcentaje
+export function stageRows(job) {
+  const source = job.stages?.length ? job.stages : stagesFor(job)
+  return source
+    .filter((s) => s.state !== 'skipped')
+    .map((s) => ({ label: s.label, state: s.state, pct: s.pct, detail: stageDetail(s) }))
+}
+
+// "Descargando video · 45 %" para la tarjeta de la cola
+export function stageSummary(job) {
+  const active = stageRows(job).find((s) => s.state === 'active')
+  if (!active) return null
+  return active.pct == null ? active.label : `${active.label} · ${Math.round(active.pct)} %`
 }
 
 export function fileName(job) {

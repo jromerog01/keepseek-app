@@ -12,7 +12,8 @@ router = APIRouter(prefix="/api", tags=["jobs"], dependencies=[Depends(require_a
 
 
 def _out(request: Request, job: Job) -> JobOut:
-    return JobOut.from_job(job, request.app.state.settings.file_ttl_hours)
+    state = request.app.state
+    return JobOut.from_job(job, state.settings.file_ttl_hours, state.manager.stages_for(job.id))
 
 
 def _get_or_404(manager: JobManager, job_id: str) -> Job:

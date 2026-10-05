@@ -92,3 +92,16 @@ def test_failed_conversion_keeps_the_original(tmp_path):
         compat.fix(path, compat.Verdict(video_ok=False, audio_ok=False))
     assert path.read_bytes() == b"esto no es un video"
     assert not list(tmp_path.glob("*.compat.mp4"))
+
+
+def test_fix_reports_real_conversion_progress(tmp_path):
+    path = make_video(tmp_path / "vp9.mp4", ["-c:v", "libvpx-vp9"], ["-c:a", "libopus"])
+    verdict = compat.check(path)
+    assert verdict.duration and verdict.duration > 0.5
+
+    seen = []
+    compat.fix(path, verdict, on_progress=seen.append)
+
+    assert seen and seen[-1] == 100.0
+    assert all(0 <= value <= 100 for value in seen)
+    assert seen == sorted(seen)

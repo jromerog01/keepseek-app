@@ -98,9 +98,14 @@ Para contenido que pide sesión (Instagram, videos con restricción de edad, o c
 ## Notas de formato
 
 - **MP4** exige H.264 + AAC, que es lo que acepta la app Fotos. Al terminar, Clipo revisa el archivo con `ffprobe` y, si salió en otro códec (VP9, AV1, audio Opus o H.264 de 10 bits), lo convierte con ffmpeg y copia sin recodificar lo que ya sea compatible.
-- **4K en MP4**: YouTube no ofrece H.264 en 4K, así que la conversión automática tarda bastante más. Con 1080p o menos no hace falta.
+- **4K en MP4**: YouTube no ofrece H.264 en 4K (el máximo es 1080p). Clipo baja el 4K real (VP9/AV1) y lo convierte a H.264 al terminar, mostrando el avance de la conversión; tarda bastante más y el archivo final pesa más que el estimado. Con 1080p o menos no hace falta convertir.
+- **Etapas visibles:** la pantalla de cada descarga muestra por separado extraer información, descargar video, descargar audio, unir audio y video y, si hace falta, convertir para iPhone, cada una con su porcentaje.
 - **WEBM y MKV** no se convierten: son para reproducirse fuera de Fotos.
 - Los archivos de más de 300 MB se descargan directo con el gestor de Safari en lugar de cargarse en memoria.
+
+## Si la barra inferior se ve mal en el iPhone
+
+Abre `/diag.html` dentro de la PWA (toca la etiqueta `yt-dlp` de la pantalla de inicio). Muestra el alto real que reporta iOS y dibuja marcas de referencia; una captura de esa página sirve para ajustar el diseño a tu modelo.
 
 ## Desarrollo
 

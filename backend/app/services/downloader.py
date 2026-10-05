@@ -64,13 +64,14 @@ def ytdlp_download(job: Job, out_dir: Path, reporter: Reporter, *, settings: Set
 
     def on_postprocess(data: dict) -> None:
         reporter.check()
-        if data["status"] != "started":
-            return
         name = data.get("postprocessor", "")
-        if name == "Merger":
-            reporter.stage("Uniendo con ffmpeg", 90)
-        elif "ExtractAudio" in name:
-            reporter.stage("Convirtiendo", 85)
+        key = "merge" if name == "Merger" else "convert" if "ExtractAudio" in name else None
+        if key is None:
+            return
+        if data["status"] == "started":
+            reporter.stage("Uniendo audio y video" if key == "merge" else "Convirtiendo", 90 if key == "merge" else 85, key=key)
+        elif data["status"] == "finished":
+            reporter.stage_done(key)
 
     opts["progress_hooks"] = [on_progress]
     opts["postprocessor_hooks"] = [on_postprocess]
@@ -89,7 +90,8 @@ def _make_photos_compatible(path: Path, reporter: Reporter) -> None:
         verdict = compat.check(path)
         if verdict.ok:
             return
-        reporter.stage("Convirtiendo para iPhone", 92)
-        compat.fix(path, verdict)
+        reporter.begin_conversion()
+        compat.fix(path, verdict, on_progress=reporter.conversion_progress)
+        reporter.stage_done("convert_ios")
     except (OSError, subprocess.SubprocessError, ValueError):
         log.exception("No se pudo comprobar o convertir %s; se entrega tal cual", path.name)

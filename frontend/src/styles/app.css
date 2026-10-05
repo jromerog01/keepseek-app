@@ -79,7 +79,11 @@ input::placeholder { color: var(--color-neutral-600); }
   transition: --glow .7s ease, --glow2 .7s ease;
 }
 
-:root { --tabbar-h: calc(56px + max(env(safe-area-inset-bottom, 0px), 12px)); }
+:root {
+  --deficit: 0px;
+  /* El área segura inferior ya queda cubierta por la franja que iOS no dibuja (--deficit) */
+  --tabbar-h: calc(56px + max(env(safe-area-inset-bottom, 0px) - var(--deficit), 12px));
+}
 
 /* Columna central: en teléfonos ocupa todo el ancho; en iPad o escritorio no se estira */
 .col {

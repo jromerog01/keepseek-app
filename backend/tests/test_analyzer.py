@@ -115,3 +115,25 @@ def test_private_hosts_are_rejected(url):
 def test_clean_error_strips_ansi_and_prefixes():
     exc = Exception("\x1b[0;31mERROR:\x1b[0m [youtube] abc123: Video unavailable")
     assert clean_error(exc) == "Video unavailable"
+
+
+def test_size_estimate_follows_the_codec_the_downloader_will_pick():
+    small_h264 = vfmt(1920, 1080, tbr=800, vcodec="avc1.640028", filesize=100)
+    big_av1 = vfmt(1920, 1080, tbr=2000, vcodec="av01.0.08M.08", filesize=900)
+    formats = [small_h264, big_av1, {**AUDIO, "filesize": 10}]
+    assert analyzer.video_qualities(formats, 100)[0]["size_bytes"] == 110
+
+
+def test_4k_estimate_uses_vp9_not_the_heaviest_codec():
+    vp9 = vfmt(3840, 2160, tbr=15000, vcodec="vp09.00.50.08", filesize=1000)
+    av1 = vfmt(3840, 2160, tbr=25000, vcodec="av01.0.12M.08", filesize=1800)
+    formats = [vp9, av1, vfmt(1920, 1080), {**AUDIO, "filesize": 10}]
+    by_id = {q["id"]: q for q in analyzer.video_qualities(formats, 100)}
+    assert by_id["2160"]["size_bytes"] == 1010
+
+
+def test_audio_estimate_prefers_aac_like_the_downloader():
+    opus = {"vcodec": "none", "acodec": "opus", "tbr": 160, "filesize": 500}
+    aac = {"vcodec": "none", "acodec": "mp4a.40.2", "tbr": 128, "filesize": 100}
+    formats = [vfmt(1920, 1080, filesize=1000), opus, aac]
+    assert analyzer.video_qualities(formats, 100)[0]["size_bytes"] == 1100

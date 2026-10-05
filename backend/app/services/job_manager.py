@@ -15,6 +15,7 @@ from yt_dlp.utils import DownloadCancelled
 from app.models import Job, utcnow
 from app.services import formats, platforms
 from app.services.errors import clean_error
+from app.services.stages import StageTracker
 
 ACTIVE_STATUSES = ("waiting", "running", "paused")
 RESUMABLE_STATUSES = ("paused", "error")
@@ -38,6 +39,8 @@ class Reporter:
         self._manager = manager
         self.job = job
         self._streams: dict[str, tuple[int, int]] = {}
+        self.tracker = StageTracker(job.mode)
+        self.tracker.begin("info")
 
     def check(self) -> None:
         action = self._manager.pending_action(self.job.id)
@@ -71,6 +74,9 @@ class Reporter:
         self.job.downloaded_bytes = downloaded
         self.job.total_bytes = max(self.job.size_estimate or 0, seen_total) or None
 
+    def _stage_key(self, kind: str) -> str:
+        return "audio" if self.job.mode == "audio" or kind == "audio" else "video"
+
     def stream(self, key: str, kind: str, downloaded: int | None, total: int | None, speed: float | None) -> None:
         self._streams[key] = (int(downloaded or 0), int(total or 0))
         self._refresh_bytes()
@@ -79,17 +85,37 @@ class Reporter:
         self._advance(low + (high - low) * fraction)
         self.job.stage = self._label(kind)
         self.job.speed = speed
+        self.tracker.finish("info")
+        self.tracker.progress(self._stage_key(kind), fraction * 100)
 
     def stream_done(self, key: str, kind: str, total: int | None) -> None:
         size = int(total or self._streams.get(key, (0, 0))[1])
         self._streams[key] = (size, size)
         self._refresh_bytes()
         self._advance(self._range(kind)[1])
+        self.tracker.finish("info")
+        self.tracker.finish(self._stage_key(kind))
+        if self.job.mode == "video" and kind == "both":
+            self.tracker.skip("audio")
+            self.tracker.skip("merge")
 
-    def stage(self, label: str, pct: float) -> None:
+    def stage(self, label: str, pct: float, key: str | None = None) -> None:
         self.job.stage = label
         self.job.speed = None
         self._advance(pct)
+        if key:
+            self.tracker.begin(key)
+
+    def stage_done(self, key: str) -> None:
+        self.tracker.finish(key)
+
+    def begin_conversion(self) -> None:
+        self.tracker.add("convert_ios")
+        self.stage("Convirtiendo para iPhone", 92, key="convert_ios")
+
+    def conversion_progress(self, pct: float) -> None:
+        self.tracker.progress("convert_ios", pct)
+        self._advance(92 + 7 * min(pct, 100) / 100)
 
 
 Downloader = Callable[[Job, Path, Reporter], Path]
@@ -116,6 +142,7 @@ class JobManager:
         self._jobs: dict[str, Job] = {}
         self._order: dict[str, int] = {}
         self._flags: dict[str, str] = {}
+        self._trackers: dict[str, StageTracker] = {}
         self._counter = itertools.count()
 
         self._lock = threading.RLock()
@@ -172,6 +199,10 @@ class JobManager:
 
     def pending_action(self, job_id: str) -> str | None:
         return self._flags.get(job_id)
+
+    def stages_for(self, job_id: str) -> list[dict] | None:
+        tracker = self._trackers.get(job_id)
+        return tracker.snapshot() if tracker else None
 
     def file_path(self, job: Job) -> Path | None:
         if job.status != "done" or not job.filename:
@@ -335,6 +366,7 @@ class JobManager:
         self._jobs.pop(job.id, None)
         self._order.pop(job.id, None)
         self._flags.pop(job.id, None)
+        self._trackers.pop(job.id, None)
         shutil.rmtree(self._downloads / job.id, ignore_errors=True)
         self._delete_row(job.id)
         self._schedule()
@@ -361,8 +393,10 @@ class JobManager:
             return
         out_dir = self._downloads / job_id
         out_dir.mkdir(parents=True, exist_ok=True)
+        reporter = Reporter(self, job)
+        self._trackers[job_id] = reporter.tracker
         try:
-            path = self._downloader(job, out_dir, Reporter(self, job))
+            path = self._downloader(job, out_dir, reporter)
         except Exception as exc:
             self._finish_failed(job, exc)
         else:
@@ -374,6 +408,9 @@ class JobManager:
                 self._remove(job)
                 return
             size = path.stat().st_size
+            tracker = self._trackers.get(job.id)
+            if tracker:
+                tracker.settle()
             job.status = "done"
             job.progress = 100.0
             job.stage = "Listo"

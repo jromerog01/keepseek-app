@@ -31,6 +31,13 @@ def test_fps_cap_goes_before_codec_preference():
     assert result["format_sort"] == ["res:720", "fps:30", "vcodec:h264", "acodec:m4a"]
 
 
+def test_4k_mp4_does_not_force_h264_so_it_is_not_downgraded_to_1080p():
+    assert opts(quality="2160")["format"] == "bv*+ba/b"
+    assert opts(quality="2160")["format_sort"][0] == "res:2160"
+    for quality in ("1080", "720", "480"):
+        assert "avc|h264" in opts(quality=quality)["format"]
+
+
 def test_webm_and_mkv_do_not_force_h264():
     assert opts(fmt="WEBM")["format"] == "bv*+ba/b"
     assert opts(fmt="MKV")["format"] == "bv*+ba/b"

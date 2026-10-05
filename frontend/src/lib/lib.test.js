@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { detect, isPlaylistUrl } from './platforms.js'
-import { etaLabel, fileName, fmtBytes, fmtDuration, sizeLabel, stagesFor, statusLabel } from './format.js'
+import { etaLabel, fileName, fmtBytes, fmtDuration, sizeLabel, stageRows, stagesFor, stageSummary, statusLabel } from './format.js'
+import { computeDeficit } from './viewport.js'
 import { glowFor, pick } from './styles.js'
 import { readBody } from './download.js'
 
@@ -102,5 +103,65 @@ describe('estilos', () => {
     expect(glowFor(null, 'dark').glow).toBe('oklch(0.44 0.07 235)')
     expect(glowFor('instagram', 'dark').glow2).toBe('oklch(0.36 0.1 315)')
     expect(glowFor('tiktok', 'light')).toEqual({ glow: 'oklch(0.6 0.03 300)', glow2: 'oklch(0.76 0.13 305)' })
+  })
+})
+
+
+describe('etapas con su propio porcentaje', () => {
+  const live = {
+    status: 'running', mode: 'video', progress: 55,
+    stages: [
+      { key: 'info', label: 'Extrayendo información', state: 'done', pct: 100 },
+      { key: 'video', label: 'Descargando video', state: 'done', pct: 100 },
+      { key: 'audio', label: 'Descargando audio', state: 'active', pct: 42.4 },
+      { key: 'merge', label: 'Uniendo audio y video', state: 'pending', pct: 0 },
+    ],
+  }
+
+  it('muestra cada etapa con su estado y su porcentaje', () => {
+    expect(stageRows(live).map((r) => [r.label, r.state, r.detail])).toEqual([
+      ['Extrayendo información', 'done', '100 %'],
+      ['Descargando video', 'done', '100 %'],
+      ['Descargando audio', 'active', '42 %'],
+      ['Uniendo audio y video', 'pending', '—'],
+    ])
+  })
+  it('una etapa en curso sin porcentaje conocido dice "En curso"', () => {
+    const merging = { ...live, stages: [{ key: 'merge', label: 'Uniendo audio y video', state: 'active', pct: null }] }
+    expect(stageRows(merging)[0].detail).toBe('En curso')
+  })
+  it('oculta las etapas que no aplicaron', () => {
+    const single = { ...live, stages: [
+      { key: 'video', label: 'Descargando video', state: 'done', pct: 100 },
+      { key: 'audio', label: 'Descargando audio', state: 'skipped', pct: null },
+    ] }
+    expect(stageRows(single).map((r) => r.label)).toEqual(['Descargando video'])
+  })
+  it('muestra la conversión para iPhone cuando existe', () => {
+    const converting = { ...live, stages: [...live.stages.slice(0, 3), { key: 'convert_ios', label: 'Convirtiendo para iPhone', state: 'active', pct: 63 }] }
+    expect(stageRows(converting).at(-1)).toMatchObject({ label: 'Convirtiendo para iPhone', detail: '63 %' })
+  })
+  it('sin detalle en vivo calcula cada porcentaje a partir del avance total', () => {
+    const rows = stageRows({ status: 'running', mode: 'video', progress: 39 })
+    expect(rows.map((r) => r.state)).toEqual(['done', 'active', 'pending', 'pending'])
+    expect(rows[1].detail).toBe('50 %')
+  })
+  it('resume la etapa actual para la cola', () => {
+    expect(stageSummary(live)).toBe('Descargando audio · 42 %')
+    expect(stageSummary({ ...live, stages: [{ key: 'merge', label: 'Uniendo audio y video', state: 'active', pct: null }] })).toBe('Uniendo audio y video')
+    expect(stageSummary({ status: 'done', mode: 'video', progress: 100 })).toBeNull()
+  })
+})
+
+describe('déficit de altura en la PWA de iOS', () => {
+  const base = { standalone: true, innerWidth: 393, innerHeight: 793, screenHeight: 852 }
+  it('mide cuánto falta cuando iOS reporta menos alto que la pantalla', () => {
+    expect(computeDeficit(base)).toBe(59)
+  })
+  it('es 0 si el alto coincide, en Safari normal, en horizontal o con diferencias enormes', () => {
+    expect(computeDeficit({ ...base, innerHeight: 852 })).toBe(0)
+    expect(computeDeficit({ ...base, standalone: false })).toBe(0)
+    expect(computeDeficit({ ...base, innerWidth: 852, innerHeight: 393 })).toBe(0)
+    expect(computeDeficit({ ...base, innerHeight: 600 })).toBe(0)
   })
 })

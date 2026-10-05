@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue'
-import { sizeLabel, statusLabel } from '../lib/format.js'
+import { sizeLabel, stageSummary, statusLabel } from '../lib/format.js'
 import { useClipo } from '../store/useClipo.js'
 import Icon from '../components/Icon.vue'
 
@@ -8,7 +8,10 @@ const { activeJobs, doneJobs, anyRunning, openDetail, togglePause, retry, cancel
 
 const hasPausable = computed(() => activeJobs.value.some((j) => j.status !== 'error'))
 const pct = (job) => Math.round(job.progress) + '%'
-const activeMeta = (job) => (job.status === 'error' ? job.error || 'La descarga falló' : job.spec)
+const activeMeta = (job) => {
+  if (job.status === 'error') return job.error || 'La descarga falló'
+  return (job.status === 'running' && stageSummary(job)) || job.spec
+}
 const doneMeta = (job) => [job.spec, sizeLabel(job), job.source === 'shortcut' ? 'Atajo' : null].filter(Boolean).join(' · ')
 </script>
 

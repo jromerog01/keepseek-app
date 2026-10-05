@@ -39,12 +39,31 @@ def _largest(formats: list[dict]) -> dict | None:
     return max(formats, key=lambda f: f.get("tbr") or 0) if formats else None
 
 
+def _codec_matches(fmt: dict, field: str, prefixes: tuple[str, ...]) -> bool:
+    return (fmt.get(field) or "").lower().startswith(prefixes)
+
+
+def _expected_video(tier: list[dict]) -> dict | None:
+    """El formato que bajará el descargador: H.264 si existe en esa resolución, si no VP9, si no el más pesado."""
+    for prefixes in (("avc", "h264"), ("vp9", "vp09")):
+        candidates = [f for f in tier if _codec_matches(f, "vcodec", prefixes)]
+        if candidates:
+            return _largest(candidates)
+    return _largest(tier)
+
+
+def _expected_audio(audios: list[dict]) -> dict | None:
+    """El descargador prefiere audio AAC (m4a); sin él, el más pesado."""
+    aac = [f for f in audios if _codec_matches(f, "acodec", ("mp4a", "aac"))]
+    return _largest(aac) or _largest(audios)
+
+
 def video_qualities(formats: list[dict], duration: int | None) -> list[dict]:
     videos = [f for f in formats if _has_video(f) and _res(f)]
     if not videos:
         return []
     audios = [f for f in formats if _has_audio(f) and not _has_video(f)]
-    best_audio = _largest(audios)
+    best_audio = _expected_audio(audios)
 
     resolutions = sorted({_res(f) for f in videos})
     max_res = resolutions[-1]
@@ -56,7 +75,7 @@ def video_qualities(formats: list[dict], duration: int | None) -> list[dict]:
         eligible = [r for r in resolutions if r <= target]
         chosen = max(eligible) if eligible else min(resolutions)
         tier = [f for f in videos if _res(f) == chosen]
-        best_video = _largest(tier)
+        best_video = _expected_video(tier)
 
         video_bytes = _estimate_bytes(best_video, duration)
         audio_bytes = 0 if _has_audio(best_video) else _estimate_bytes(best_audio, duration)

@@ -90,7 +90,10 @@ def build_ydl_opts(
     elif fmt == "WEBM":
         sort += ["vcodec:vp9", "acodec:opus"]
 
-    opts["format"] = _MP4_FORMAT if fmt == "MP4" else "bv*+ba/b"
+    # Con H.264 obligatorio un pedido de 4K caería a 1080p (YouTube no tiene H.264 en 4K):
+    # en 4K se baja el 4K real y compat.py lo convierte al terminar.
+    needs_h264 = fmt == "MP4" and int(quality) <= 1080
+    opts["format"] = _MP4_FORMAT if needs_h264 else "bv*+ba/b"
     opts["format_sort"] = sort
     opts["merge_output_format"] = fmt.lower()
     return opts

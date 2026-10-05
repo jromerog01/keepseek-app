@@ -46,6 +46,13 @@ def _iso(value: datetime | None) -> str | None:
     return value.isoformat() + "Z" if value else None
 
 
+class StageOut(BaseModel):
+    key: str
+    label: str
+    state: str
+    pct: float | None
+
+
 class JobOut(BaseModel):
     id: str
     url: str
@@ -74,9 +81,10 @@ class JobOut(BaseModel):
     finished_at: str | None
     expires_at: str | None
     file_available: bool
+    stages: list[StageOut] | None = None
 
     @classmethod
-    def from_job(cls, job: Job, ttl_hours: int) -> "JobOut":
+    def from_job(cls, job: Job, ttl_hours: int, stages: list[dict] | None = None) -> "JobOut":
         eta = None
         if job.status == "running" and job.speed and job.total_bytes:
             remaining = max(job.total_bytes - job.downloaded_bytes, 0)
@@ -114,4 +122,5 @@ class JobOut(BaseModel):
             finished_at=_iso(job.finished_at),
             expires_at=expires_at,
             file_available=job.status == "done" and bool(job.filename),
+            stages=stages,
         )

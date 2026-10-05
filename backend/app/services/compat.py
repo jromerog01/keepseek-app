@@ -1,5 +1,7 @@
 import json
 import subprocess
+import tempfile
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -14,18 +16,19 @@ FFPROBE_TIMEOUT = 60
 class Verdict:
     video_ok: bool
     audio_ok: bool
+    duration: float | None = None
 
     @property
     def ok(self) -> bool:
         return self.video_ok and self.audio_ok
 
 
-def _probe(path: Path) -> list[dict]:
+def _probe(path: Path) -> dict:
     result = subprocess.run(
-        ["ffprobe", "-v", "error", "-print_format", "json", "-show_streams", str(path)],
+        ["ffprobe", "-v", "error", "-print_format", "json", "-show_streams", "-show_format", str(path)],
         capture_output=True, text=True, check=True, timeout=FFPROBE_TIMEOUT,
     )
-    return json.loads(result.stdout).get("streams", [])
+    return json.loads(result.stdout)
 
 
 def _video_stream_ok(stream: dict) -> bool:
@@ -38,19 +41,39 @@ def _video_stream_ok(stream: dict) -> bool:
 
 
 def check(path: Path) -> Verdict:
-    streams = _probe(path)
+    probed = _probe(path)
+    streams = probed.get("streams", [])
+    try:
+        duration = float(probed.get("format", {}).get("duration"))
+    except (TypeError, ValueError):
+        duration = None
     videos = [s for s in streams if s.get("codec_type") == "video" and not s.get("disposition", {}).get("attached_pic")]
     audios = [s for s in streams if s.get("codec_type") == "audio"]
     return Verdict(
         video_ok=all(_video_stream_ok(s) for s in videos),
         audio_ok=all(s.get("codec_name") in PHOTOS_AUDIO_CODECS for s in audios),
+        duration=duration,
     )
 
 
-def fix(path: Path, verdict: Verdict) -> None:
-    """Convierte solo lo que Fotos no acepta; lo compatible se copia sin recodificar."""
+def _seconds(line: str) -> float | None:
+    key, _, value = line.strip().partition("=")
+    if key in ("out_time_us", "out_time_ms"):  # ambos vienen en microsegundos
+        try:
+            return int(value) / 1_000_000
+        except ValueError:
+            return None
+    return None
+
+
+def fix(path: Path, verdict: Verdict, on_progress: Callable[[float], None] | None = None) -> None:
+    """Convierte solo lo que Fotos no acepta; lo compatible se copia sin recodificar.
+
+    on_progress recibe el avance real (0-100) calculado con la duración del video.
+    """
     output = path.with_name(path.stem + ".compat.mp4")
-    command = ["ffmpeg", "-y", "-v", "error", "-i", str(path), "-map", "0:v:0?", "-map", "0:a:0?"]
+    command = ["ffmpeg", "-y", "-v", "error", "-nostats", "-progress", "pipe:1",
+               "-i", str(path), "-map", "0:v:0?", "-map", "0:a:0?"]
 
     if verdict.video_ok:
         command += ["-c:v", "copy"]
@@ -65,9 +88,28 @@ def fix(path: Path, verdict: Verdict) -> None:
     command += ["-movflags", "+faststart", str(output)]
 
     try:
-        subprocess.run(command, capture_output=True, text=True, check=True)
+        _run_ffmpeg(command, verdict.duration, on_progress)
     except BaseException:
         output.unlink(missing_ok=True)
         raise
     path.unlink()
     output.rename(path)
+
+
+def _run_ffmpeg(command: list[str], duration: float | None, on_progress: Callable[[float], None] | None) -> None:
+    with tempfile.TemporaryFile() as errors:
+        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=errors, text=True)
+        try:
+            for line in process.stdout:
+                seconds = _seconds(line)
+                if on_progress and duration and seconds is not None:
+                    on_progress(min(seconds / duration * 100, 99.0))
+            code = process.wait()
+        except BaseException:
+            process.kill()
+            raise
+        if code != 0:
+            errors.seek(0)
+            raise subprocess.CalledProcessError(code, command, stderr=errors.read().decode(errors="replace"))
+    if on_progress:
+        on_progress(100.0)
