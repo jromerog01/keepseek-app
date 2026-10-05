@@ -84,4 +84,20 @@ input::placeholder { color: var(--color-neutral-600); }
 
 :root { --tabbar-h: calc(56px + max(env(safe-area-inset-bottom, 0px), 12px)); }
 
+/* Columna central: en teléfonos ocupa todo el ancho; en iPad o escritorio no se estira */
+.col {
+  width: 100%;
+  max-width: 520px;
+  margin-inline: auto;
+}
+
+.platform-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+@media (max-width: 350px) {
+  .platform-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
 .reset { all: unset; box-sizing: border-box; }

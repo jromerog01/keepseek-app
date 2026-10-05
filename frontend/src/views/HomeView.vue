@@ -96,7 +96,7 @@ const monoStyle = (id) => {
         <h6 style="margin:0;color:var(--color-neutral-500)">Plataformas</h6>
         <span style="font-size:11px;color:var(--color-neutral-600)">+1000 sitios</span>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px">
+      <div class="platform-grid">
         <button
           v-for="p in PLATFORMS"
           :key="p.id"

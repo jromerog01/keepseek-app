@@ -25,27 +25,31 @@ onMounted(boot)
           class="scr"
           style="position:absolute;top:env(safe-area-inset-top, 0px);left:0;right:0;bottom:var(--tabbar-h);overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none"
         >
-          <HomeView v-if="screen === 'home'" />
-          <OptionsView v-else-if="screen === 'options'" />
-          <ProgressView v-else-if="screen === 'progress'" />
-          <LibraryView v-else />
+          <div class="col">
+            <HomeView v-if="screen === 'home'" />
+            <OptionsView v-else-if="screen === 'options'" />
+            <ProgressView v-else-if="screen === 'progress'" />
+            <LibraryView v-else />
+          </div>
         </main>
 
         <div
           v-if="screen === 'options'"
-          style="position:absolute;left:0;right:0;bottom:var(--tabbar-h);padding:14px 22px;background:linear-gradient(to top, var(--color-bg) 70%, transparent);z-index:4"
+          style="position:absolute;left:0;right:0;bottom:var(--tabbar-h);background:linear-gradient(to top, var(--color-bg) 70%, transparent);z-index:4"
         >
-          <button
-            class="btn btn-primary"
-            :disabled="itemCount === 0"
-            style="width:100%;height:54px;border-radius:var(--radius-lg);justify-content:space-between;padding:0 18px;background:var(--color-bg);box-shadow:0 0 28px color-mix(in srgb, var(--color-accent) 30%, transparent)"
-            @click="download"
-          >
-            <span style="display:flex;align-items:center;gap:10px;font-size:15px">
-              <Icon name="download" :size="18" />{{ state.analysis?.is_playlist ? `Descargar ${itemCount} ${itemCount === 1 ? 'video' : 'videos'}` : 'Descargar' }}
-            </span>
-            <span style="font-size:12px;color:var(--color-accent-300)">{{ summary }}</span>
-          </button>
+          <div class="col" style="padding:14px 22px">
+            <button
+              class="btn btn-primary"
+              :disabled="itemCount === 0"
+              style="width:100%;height:54px;border-radius:var(--radius-lg);justify-content:space-between;padding:0 18px;background:var(--color-bg);box-shadow:0 0 28px color-mix(in srgb, var(--color-accent) 30%, transparent)"
+              @click="download"
+            >
+              <span style="display:flex;align-items:center;gap:10px;font-size:15px">
+                <Icon name="download" :size="18" />{{ state.analysis?.is_playlist ? `Descargar ${itemCount} ${itemCount === 1 ? 'video' : 'videos'}` : 'Descargar' }}
+              </span>
+              <span style="font-size:12px;color:var(--color-accent-300)">{{ summary }}</span>
+            </button>
+          </div>
         </div>
 
         <Toast />
