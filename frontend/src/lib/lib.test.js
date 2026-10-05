@@ -3,6 +3,7 @@ import { detect, isPlaylistUrl } from './platforms.js'
 import { etaLabel, fileName, fmtBytes, fmtDuration, sizeLabel, stagesFor, statusLabel } from './format.js'
 import { glowFor, pick } from './styles.js'
 import { computeAppHeight } from './viewport.js'
+import { readBody } from './download.js'
 
 describe('detect', () => {
   it('reconoce las plataformas del diseño', () => {
@@ -69,6 +70,26 @@ describe('format', () => {
   it('genera un nombre de archivo seguro', () => {
     expect(fileName({ title: 'Cómo: hacer/pan?', format: 'MP4' })).toBe('Cómo hacer pan.mp4')
     expect(fileName({ title: '???', format: 'MP3' })).toBe('clipo.mp3')
+  })
+})
+
+describe('readBody', () => {
+  const streamOf = (chunks, headers) => new Response(new ReadableStream({
+    start(controller) { chunks.forEach((c) => controller.enqueue(c)); controller.close() },
+  }), { headers })
+
+  it('arma el archivo y reporta el avance por partes', async () => {
+    const response = streamOf([new Uint8Array(40), new Uint8Array(60)], { 'Content-Type': 'video/mp4', 'Content-Length': '100' })
+    const seen = []
+    const blob = await readBody(response, (p) => seen.push(p))
+    expect(blob.size).toBe(100)
+    expect(blob.type).toBe('video/mp4')
+    expect(seen).toEqual([{ received: 40, total: 100 }, { received: 100, total: 100 }])
+  })
+  it('usa el tamaño del job si no hay Content-Length', async () => {
+    const seen = []
+    await readBody(streamOf([new Uint8Array(10)], {}), (p) => seen.push(p), 50)
+    expect(seen).toEqual([{ received: 10, total: 50 }])
   })
 })
 
