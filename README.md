@@ -96,8 +96,9 @@ Para contenido que pide sesión (Instagram, videos con restricción de edad, o c
 
 ## Notas de formato
 
-- **MP4** prioriza H.264 + AAC, que es lo que acepta la app Fotos.
-- **4K en MP4**: YouTube no ofrece H.264 en 4K, así que sale en VP9/AV1 y puede no guardarse en Fotos. La app lo avisa.
+- **MP4** exige H.264 + AAC, que es lo que acepta la app Fotos. Al terminar, Clipo revisa el archivo con `ffprobe` y, si salió en otro códec (VP9, AV1, audio Opus o H.264 de 10 bits), lo convierte con ffmpeg y copia sin recodificar lo que ya sea compatible.
+- **4K en MP4**: YouTube no ofrece H.264 en 4K, así que la conversión automática tarda bastante más. Con 1080p o menos no hace falta.
+- **WEBM y MKV** no se convierten: son para reproducirse fuera de Fotos.
 - Los archivos de más de 300 MB se descargan directo con el gestor de Safari en lugar de cargarse en memoria.
 
 ## Desarrollo

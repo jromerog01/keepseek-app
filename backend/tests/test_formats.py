@@ -13,9 +13,15 @@ def opts(**kwargs):
     return formats.build_ydl_opts(**base)
 
 
+def test_mp4_requires_h264_and_aac_for_iphone_with_fallback():
+    selector = opts()["format"]
+    first_choice, *fallbacks = selector.split("/")
+    assert "avc|h264" in first_choice and "mp4a|aac" in first_choice
+    assert fallbacks[-1] == "b" and "bv*+ba" in fallbacks
+
+
 def test_mp4_prefers_h264_and_m4a_for_iphone():
     result = opts()
-    assert result["format"] == "bv*+ba/b"
     assert result["format_sort"] == ["res:1080", "vcodec:h264", "acodec:m4a"]
     assert result["merge_output_format"] == "mp4"
 
@@ -23,6 +29,11 @@ def test_mp4_prefers_h264_and_m4a_for_iphone():
 def test_fps_cap_goes_before_codec_preference():
     result = opts(quality="720", fps=30)
     assert result["format_sort"] == ["res:720", "fps:30", "vcodec:h264", "acodec:m4a"]
+
+
+def test_webm_and_mkv_do_not_force_h264():
+    assert opts(fmt="WEBM")["format"] == "bv*+ba/b"
+    assert opts(fmt="MKV")["format"] == "bv*+ba/b"
 
 
 def test_webm_prefers_vp9_opus():

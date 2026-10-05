@@ -1,11 +1,15 @@
+import logging
+import subprocess
 from pathlib import Path
 
 from yt_dlp import YoutubeDL
 
 from app.config import Settings
 from app.models import Job
-from app.services import formats, platforms
+from app.services import compat, formats, platforms
 from app.services.job_manager import Reporter
+
+log = logging.getLogger("clipo")
 
 _TEMPORARY_SUFFIXES = {".part", ".ytdl", ".temp"}
 
@@ -74,4 +78,18 @@ def ytdlp_download(job: Job, out_dir: Path, reporter: Reporter, *, settings: Set
     with YoutubeDL(opts) as ydl:
         info = ydl.extract_info(job.url, download=True)
 
-    return _find_output(out_dir, info)
+    path = _find_output(out_dir, info)
+    if job.mode == "video" and job.format == "MP4":
+        _make_photos_compatible(path, reporter)
+    return path
+
+
+def _make_photos_compatible(path: Path, reporter: Reporter) -> None:
+    try:
+        verdict = compat.check(path)
+        if verdict.ok:
+            return
+        reporter.stage("Convirtiendo para iPhone", 92)
+        compat.fix(path, verdict)
+    except (OSError, subprocess.SubprocessError, ValueError):
+        log.exception("No se pudo comprobar o convertir %s; se entrega tal cual", path.name)

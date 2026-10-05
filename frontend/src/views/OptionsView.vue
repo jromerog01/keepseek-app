@@ -146,7 +146,7 @@ const modeDisabled = (id) => id === 'video' && state.analysis?.audio_only
         >{{ f }}</button>
       </div>
       <p v-if="showHdNote" style="margin:0;font-size:12px;color:var(--color-neutral-500)">
-        El 4K en MP4 usa VP9/AV1 y puede no guardarse en Fotos. Con 1080p queda H.264, compatible con el iPhone.
+        YouTube no ofrece 4K en H.264. Para que Fotos lo acepte, Clipo lo convierte al terminar y tarda más. Con 1080p no hace falta.
       </p>
     </div>
   </div>

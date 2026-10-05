@@ -8,6 +8,12 @@ FPS_VALUES = (30, 60)
 
 _AUDIO_CODECS = {"MP3": "mp3", "M4A": "m4a", "OPUS": "opus"}
 
+# MP4 para iPhone: H.264 + AAC (lo que acepta Fotos). Si el sitio no ofrece H.264,
+# cae al mejor formato disponible y compat.py lo convierte al terminar.
+_H264 = "[vcodec~='^(avc|h264)']"
+_AAC = "[acodec~='^(mp4a|aac)']"
+_MP4_FORMAT = f"bv*{_H264}+ba{_AAC}/bv*{_H264}+ba/b{_H264}/bv*+ba/b"
+
 
 def validate_options(mode: str, quality: str, fps: int | None, fmt: str) -> None:
     if mode == "video":
@@ -84,7 +90,7 @@ def build_ydl_opts(
     elif fmt == "WEBM":
         sort += ["vcodec:vp9", "acodec:opus"]
 
-    opts["format"] = "bv*+ba/b"
+    opts["format"] = _MP4_FORMAT if fmt == "MP4" else "bv*+ba/b"
     opts["format_sort"] = sort
     opts["merge_output_format"] = fmt.lower()
     return opts
