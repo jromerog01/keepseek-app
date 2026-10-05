@@ -8,9 +8,12 @@ log() { echo "[clipo-rebuild $(date -Is)] $*"; }
 
 mkdir -p data
 
+port=$(grep -E '^CLIPO_PORT=' .env 2>/dev/null | tail -1 | cut -d= -f2 | tr -d '[:space:]')
+port="${port:-8010}"
+
 # Espera (máx. 30 min) a que no haya descargas activas para no interrumpirlas.
 for _ in $(seq 1 180); do
-  active=$(curl -fsS --max-time 5 http://127.0.0.1:8000/api/health 2>/dev/null \
+  active=$(curl -fsS --max-time 5 "http://127.0.0.1:${port}/api/health" 2>/dev/null \
     | grep -o '"active_jobs":[0-9]*' | cut -d: -f2 || true)
   if [ -z "${active:-}" ] || [ "$active" = "0" ]; then
     break

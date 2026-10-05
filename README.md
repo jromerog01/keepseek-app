@@ -27,7 +27,9 @@ mkdir -p data
 docker compose up -d --build
 ```
 
-Abre `http://127.0.0.1:8000` e inicia sesión con tu `API_TOKEN`.
+Abre `http://127.0.0.1:8010` (o el valor de `CLIPO_PORT` en tu `.env`) e inicia sesión con tu `API_TOKEN`.
+
+> Clipo solo escucha en `127.0.0.1:CLIPO_PORT` del servidor (por defecto 8010). Si ese puerto ya está ocupado, cambia `CLIPO_PORT` en `.env` y vuelve a ejecutar `docker compose up -d`. Dentro del contenedor el puerto siempre es 8000.
 
 > Para probar por `http://` sin HTTPS pon `SECURE_COOKIES=false` en `.env`. En producción déjalo en `true`.
 
@@ -39,6 +41,11 @@ iOS solo instala la PWA y registra el service worker sobre **HTTPS**. La opción
 2. Copia el token del túnel a `TUNNEL_TOKEN` en `.env` y deja `COMPOSE_PROFILES=tunnel`.
 3. En el túnel, agrega un *Public hostname*: `clipo.jromerog.dev` → servicio `http://clipo:8000`.
 4. `docker compose up -d`.
+
+**Si ya tienes un `cloudflared` corriendo en el servidor**, no uses este contenedor (deja `COMPOSE_PROFILES` vacío) y apunta el hostname según cómo corra el tuyo:
+
+- Como servicio del sistema (systemd): `http://localhost:8010` (o tu `CLIPO_PORT`).
+- Como contenedor: conéctalo a la red de Docker de Clipo y usa `http://clipo:8000`.
 
 Como queda expuesto a internet, usa un `API_TOKEN` largo y aleatorio. Todas las rutas, salvo `/api/health` y el login, exigen credenciales.
 
