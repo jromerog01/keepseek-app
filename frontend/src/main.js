@@ -6,7 +6,9 @@ import '@fontsource/inter/latin-600.css'
 import './styles/nocturne.css'
 import './styles/app.css'
 import App from './App.vue'
+import { watchAppHeight } from './lib/viewport.js'
 
+watchAppHeight()
 createApp(App).mount('#app')
 
 const ONE_HOUR = 60 * 60 * 1000

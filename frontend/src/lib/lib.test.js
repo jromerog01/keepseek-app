@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { detect, isPlaylistUrl } from './platforms.js'
 import { etaLabel, fileName, fmtBytes, fmtDuration, sizeLabel, stagesFor, statusLabel } from './format.js'
 import { glowFor, pick } from './styles.js'
+import { computeAppHeight } from './viewport.js'
 
 describe('detect', () => {
   it('reconoce las plataformas del diseño', () => {
@@ -68,6 +69,23 @@ describe('format', () => {
   it('genera un nombre de archivo seguro', () => {
     expect(fileName({ title: 'Cómo: hacer/pan?', format: 'MP4' })).toBe('Cómo hacer pan.mp4')
     expect(fileName({ title: '???', format: 'MP3' })).toBe('clipo.mp3')
+  })
+})
+
+describe('altura de la app', () => {
+  const base = { standalone: true, innerWidth: 393, innerHeight: 793, screenHeight: 852 }
+  it('usa la pantalla completa en la PWA cuando iOS reporta menos alto', () => {
+    expect(computeAppHeight(base)).toBe('852px')
+  })
+  it('no cambia nada si el alto ya coincide', () => {
+    expect(computeAppHeight({ ...base, innerHeight: 852 })).toBe('100%')
+  })
+  it('no cambia nada en Safari normal (barras del navegador)', () => {
+    expect(computeAppHeight({ ...base, standalone: false })).toBe('100%')
+  })
+  it('ignora diferencias enormes y el modo horizontal', () => {
+    expect(computeAppHeight({ ...base, innerHeight: 600 })).toBe('100%')
+    expect(computeAppHeight({ ...base, innerWidth: 852, innerHeight: 393 })).toBe('100%')
   })
 })
 
