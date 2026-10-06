@@ -10,6 +10,11 @@ AUDIO_TARGETS = (320, 192, 128)
 RECOMMENDED_VIDEO = 1080
 RECOMMENDED_AUDIO = 320
 
+# Respaldo cuando el sitio no publica peso ni bitrate: bytes por segundo de video + audio típicos
+MODEL_VIDEO_BPS = {2160: 2_000_000, 1080: 560_000, 720: 310_000, 480: 140_000}  # ~16000, 4500, 2500, 1100 kbps
+MODEL_AUDIO_BPS = 16_000  # ~128 kbps
+FPS_60_FACTOR = 1.4
+
 
 def _res(fmt: dict) -> int | None:
     sides = [v for v in (fmt.get("width"), fmt.get("height")) if v]
@@ -24,16 +29,20 @@ def _has_audio(fmt: dict) -> bool:
     return fmt.get("acodec") not in (None, "none")
 
 
-def _estimate_bytes(fmt: dict | None, duration: int | None) -> int | None:
+def _bps(fmt: dict | None, duration: int | None) -> float | None:
+    """Bytes por segundo de un formato: del peso publicado, o del bitrate."""
     if not fmt:
         return None
     size = fmt.get("filesize") or fmt.get("filesize_approx")
-    if size:
-        return int(size)
-    tbr = fmt.get("tbr")
-    if tbr and duration:
-        return int(tbr * 1000 / 8 * duration)
+    if size and duration:
+        return size / duration
+    if fmt.get("tbr"):
+        return fmt["tbr"] * 125  # kbps -> bytes/s
     return None
+
+
+def _size(bps: float, duration: int | None) -> int | None:
+    return round(bps * duration) if duration else None
 
 
 def _largest(formats: list[dict]) -> dict | None:
@@ -77,18 +86,26 @@ def video_qualities(formats: list[dict], duration: int | None) -> list[dict]:
         chosen = max(eligible) if eligible else min(resolutions)
         tier = [f for f in videos if _res(f) == chosen]
         best_video = _expected_video(tier)
-
-        video_bytes = _estimate_bytes(best_video, duration)
-        audio_bytes = 0 if _has_audio(best_video) else _estimate_bytes(best_audio, duration)
-        size = None if video_bytes is None or audio_bytes is None else video_bytes + audio_bytes
-
         has_60 = any((f.get("fps") or 0) >= 50 for f in tier)
+
+        audio_bps = 0 if _has_audio(best_video) else (_bps(best_audio, duration) or MODEL_AUDIO_BPS)
+        video_bps = _bps(best_video, duration)
+        bps = MODEL_VIDEO_BPS[target] if video_bps is None else video_bps + audio_bps
+
+        bps_30 = None
+        if has_60:
+            slow = [f for f in tier if (f.get("fps") or 0) < 50]
+            slow_bps = _bps(_expected_video(slow), duration) if slow else None
+            bps_30 = bps / FPS_60_FACTOR if slow_bps is None else slow_bps + audio_bps
+
         result.append(
             {
                 "id": str(target),
                 "label": f"{target}p",
                 "sub": {2160: "4K", 1080: "Full HD", 720: "HD", 480: "SD"}[target],
-                "size_bytes": size,
+                "bps": round(bps),
+                "bps_30": None if bps_30 is None else round(bps_30),
+                "size_bytes": _size(bps, duration),
                 "fps": [60, 30] if has_60 else [],
                 "note": None,
             }
@@ -103,13 +120,15 @@ def audio_qualities(formats: list[dict], duration: int | None) -> list[dict]:
     names = {320: "Máxima", 192: "Alta", 128: "Ligera"}
     result = []
     for kbps in AUDIO_TARGETS:
-        size = int(kbps * 1000 / 8 * duration) if duration else None
+        bps = kbps * 125
         result.append(
             {
                 "id": str(kbps),
                 "label": f"{kbps} kbps",
                 "sub": names[kbps],
-                "size_bytes": size,
+                "bps": bps,
+                "bps_30": None,
+                "size_bytes": _size(bps, duration),
                 "fps": [],
                 "note": "Recomendado" if kbps == RECOMMENDED_AUDIO else None,
             }
@@ -118,13 +137,17 @@ def audio_qualities(formats: list[dict], duration: int | None) -> list[dict]:
 
 
 def _fixed_playlist_qualities() -> list[dict]:
+    """Calidades fijas (playlists o sitios sin formatos): el peso se estima con el modelo típico."""
     result = []
     for target in RES_TARGETS:
+        bps = MODEL_VIDEO_BPS[target]
         result.append(
             {
                 "id": str(target),
                 "label": f"{target}p",
                 "sub": {2160: "4K", 1080: "Full HD", 720: "HD", 480: "SD"}[target],
+                "bps": bps,
+                "bps_30": round(bps / FPS_60_FACTOR) if target >= 1080 else None,
                 "size_bytes": None,
                 "fps": [60, 30] if target >= 1080 else [],
                 "note": "Recomendado" if target == RECOMMENDED_VIDEO else None,

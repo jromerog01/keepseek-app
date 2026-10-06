@@ -142,3 +142,65 @@ def test_audio_estimate_prefers_aac_like_the_downloader():
     aac = {"vcodec": "none", "acodec": "mp4a.40.2", "tbr": 128, "filesize": 100}
     formats = [vfmt(1920, 1080, filesize=1000), opus, aac]
     assert analyzer.video_qualities(formats, 100)[0]["size_bytes"] == 1100
+
+
+# ---------- el estimado de tamaño nunca queda vacío ----------
+
+def bare(width, height, **extra):
+    """Formato sin peso ni bitrate, como publican algunos sitios."""
+    return {"width": width, "height": height, "vcodec": "avc1", "acodec": "none", **extra}
+
+
+def test_every_quality_has_a_rate_even_when_the_site_gives_no_size_or_bitrate():
+    qualities = analyzer.video_qualities([bare(1920, 1080), bare(1280, 720), AUDIO_NO_TBR], 120)
+    assert qualities
+    for quality in qualities:
+        assert isinstance(quality["bps"], int) and quality["bps"] > 0
+
+
+AUDIO_NO_TBR = {"vcodec": "none", "acodec": "mp4a"}
+
+
+def test_model_rate_is_used_when_there_is_no_data():
+    by_id = {q["id"]: q for q in analyzer.video_qualities([bare(1920, 1080), bare(1280, 720)], None)}
+    assert by_id["1080"]["bps"] == analyzer.MODEL_VIDEO_BPS[1080]
+    assert by_id["720"]["bps"] == analyzer.MODEL_VIDEO_BPS[720]
+
+
+def test_rate_comes_from_the_bitrate_when_available():
+    quality = analyzer.video_qualities([vfmt(1920, 1080, tbr=800), {**AUDIO, "tbr": 200}], None)[0]
+    assert quality["bps"] == 800 * 125 + 200 * 125
+
+
+def test_size_needs_a_duration_but_the_rate_does_not():
+    quality = analyzer.video_qualities([vfmt(1920, 1080, tbr=800), AUDIO], None)[0]
+    assert quality["size_bytes"] is None and quality["bps"] > 0
+    with_duration = analyzer.video_qualities([vfmt(1920, 1080, tbr=800), AUDIO], 10)[0]
+    assert with_duration["size_bytes"] == round(with_duration["bps"] * 10)
+
+
+def test_30fps_rate_uses_the_real_30fps_format_when_it_exists():
+    formats = [vfmt(1920, 1080, fps=60, tbr=4000), vfmt(1920, 1080, fps=30, tbr=2500), {**AUDIO, "tbr": 128}]
+    quality = analyzer.video_qualities(formats, 100)[0]
+    assert quality["bps"] == 4000 * 125 + 128 * 125
+    assert quality["bps_30"] == 2500 * 125 + 128 * 125
+
+
+def test_30fps_rate_is_derived_when_only_60fps_exists():
+    quality = analyzer.video_qualities([vfmt(1920, 1080, fps=60, tbr=4000), {**AUDIO, "tbr": 128}], 100)[0]
+    assert quality["bps_30"] == round(quality["bps"] / analyzer.FPS_60_FACTOR)
+
+
+def test_no_30fps_rate_when_there_is_no_fps_choice():
+    quality = analyzer.video_qualities([vfmt(1920, 1080, fps=30), AUDIO], 100)[0]
+    assert quality["fps"] == [] and quality["bps_30"] is None
+
+
+def test_audio_qualities_carry_their_exact_rate():
+    assert [(q["id"], q["bps"]) for q in analyzer.audio_qualities([], None)] == [("320", 40000), ("192", 24000), ("128", 16000)]
+
+
+def test_playlist_and_formatless_sites_use_the_model():
+    qualities = analyzer._fixed_playlist_qualities()
+    assert [q["bps"] for q in qualities] == [analyzer.MODEL_VIDEO_BPS[h] for h in analyzer.RES_TARGETS]
+    assert [q["bps_30"] is not None for q in qualities] == [True, True, False, False]
