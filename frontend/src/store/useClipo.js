@@ -1,7 +1,8 @@
 import { computed, reactive } from 'vue'
 import { api, ApiError, onUnauthorized } from '../api/client.js'
 import { DEFAULT_PLACEHOLDER, detect, isPlaylistUrl, platformById } from '../lib/platforms.js'
-import { fmtBytes, fmtDuration } from '../lib/format.js'
+import { fmtApprox, fmtDuration } from '../lib/format.js'
+import { estimateTotal } from '../lib/size.js'
 import { glowFor } from '../lib/styles.js'
 
 const THEME_KEY = 'clipo-theme'
@@ -108,10 +109,25 @@ const effectiveFps = computed(() => {
   return fpsOptions.value.includes(state.fps) ? state.fps : fpsOptions.value[0]
 })
 
-const estimatedBytes = computed(() => {
-  const size = selectedQuality.value?.size_bytes
-  return size == null ? null : size * itemCount.value
+// Duración (s) de cada video que se va a descargar: uno solo, o los seleccionados de la playlist
+const selectedDurations = computed(() => {
+  const a = state.analysis
+  if (!a) return []
+  if (!a.is_playlist) return [a.duration]
+  return a.entries.filter((_, i) => state.plSel[i]).map((e) => e.duration)
 })
+
+const fpsFor = (q) => {
+  if (state.mode !== 'video' || !q?.fps || q.fps.length < 2) return null
+  return q.fps.includes(state.fps) ? state.fps : q.fps[0]
+}
+
+// Tamaño aproximado de esa calidad con el formato, los fps y los videos elegidos (nunca queda vacío)
+const sizeFor = (q) => estimateTotal({
+  quality: q, mode: state.mode, format: state.format, fps: fpsFor(q), durations: selectedDurations.value,
+})
+
+const estimatedBytes = computed(() => (selectedQuality.value ? sizeFor(selectedQuality.value) : null))
 
 const specLabel = computed(() => {
   const q = selectedQuality.value
@@ -119,7 +135,7 @@ const specLabel = computed(() => {
   if (state.mode === 'audio') return `${q.id} kbps · ${state.format}`
   return `${q.id}p${effectiveFps.value ? ' ' + effectiveFps.value + ' fps' : ''} · ${state.format}`
 })
-const summary = computed(() => specLabel.value + (estimatedBytes.value != null ? ' · ' + fmtBytes(estimatedBytes.value) : ''))
+const summary = computed(() => specLabel.value + (estimatedBytes.value != null ? ' · ' + fmtApprox(estimatedBytes.value) : ''))
 
 const optionsMeta = computed(() => {
   const a = state.analysis
@@ -310,7 +326,7 @@ async function download() {
         uploader: a.uploader,
         thumbnail: a.thumbnail,
         duration: a.duration,
-        size_estimate: q.size_bytes,
+        size_estimate: estimatedBytes.value,
       }
 
   try {
@@ -403,7 +419,7 @@ export function useClipo() {
     detail, screen, activeJobs, doneJobs, badgeCount, anyRunning, glow,
     detectedName, placeholder,
     qualities, selectedQuality, formats, selectedCount, itemCount,
-    fpsOptions, effectiveFps, estimatedBytes, specLabel, summary, optionsMeta,
+    fpsOptions, effectiveFps, estimatedBytes, sizeFor, specLabel, summary, optionsMeta,
     boot, login, logout,
     toggleTheme, setTheme,
     setUrl, paste, selectPlatform, analyze,

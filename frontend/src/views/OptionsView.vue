@@ -1,13 +1,13 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
-import { fmtBytes } from '../lib/format.js'
+import { fmtApprox } from '../lib/format.js'
 import { divider, pick } from '../lib/styles.js'
 import { useClipo } from '../store/useClipo.js'
 import Icon from '../components/Icon.vue'
 
 const {
   state, optionsMeta: meta, qualities, selectedQuality, formats, fpsOptions, effectiveFps, itemCount,
-  selectedCount, back, setMode, setQuality, setFormat, setFps, togglePlaylistItem, togglePlaylistAll,
+  selectedCount, sizeFor, back, setMode, setQuality, setFormat, setFps, togglePlaylistItem, togglePlaylistAll,
 } = useClipo()
 
 const thumbFailed = ref(false)
@@ -17,7 +17,7 @@ const isPlaylist = computed(() => state.analysis?.is_playlist)
 const modes = [['video', 'Video'], ['audio', 'Solo audio']]
 const showHdNote = computed(() => state.mode === 'video' && selectedQuality.value?.id === '2160' && state.format === 'MP4')
 
-const sizeText = (q) => fmtBytes(q.size_bytes == null ? null : q.size_bytes * itemCount.value)
+const sizeText = (q) => fmtApprox(sizeFor(q))
 const modeDisabled = (id) => id === 'video' && state.analysis?.audio_only
 </script>
 

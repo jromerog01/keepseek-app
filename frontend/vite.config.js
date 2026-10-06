@@ -31,7 +31,8 @@ export default defineConfig({
         navigateFallback: 'index.html',
         navigateFallbackDenylist: [/^\/api\//, /^\/diag\.html/],
         cleanupOutdatedCaches: true,
-        runtimeCaching: [{ urlPattern: ({ url }) => url.pathname.startsWith('/api/'), handler: 'NetworkOnly' }],
+        // /file va directo a la red: un video de varios GB no debe pasar por el service worker
+        runtimeCaching: [{ urlPattern: ({ url }) => url.pathname.startsWith('/api/') && !url.pathname.endsWith('/file'), handler: 'NetworkOnly' }],
       },
     }),
   ],

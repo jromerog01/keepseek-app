@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue'
-import { etaLabel, sizeLabel, stageRows, statusLabel } from '../lib/format.js'
+import { etaLabel, phaseLabel, sizeLabel, speedLabel, stageRows } from '../lib/format.js'
 import { T } from '../lib/styles.js'
 import { useClipo } from '../store/useClipo.js'
 import Icon from '../components/Icon.vue'
@@ -52,12 +52,20 @@ const headerTitle = computed(() => {
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       <div class="card" style="padding:12px 14px;border-radius:var(--radius-lg)">
-        <span style="font-size:11px;color:var(--color-neutral-500)">Estado</span>
-        <span style="font-size:15px">{{ statusLabel(job) }}</span>
+        <span style="font-size:11px;color:var(--color-neutral-500)">Velocidad</span>
+        <span style="font-size:17px;font-variant-numeric:tabular-nums" :style="{ color: speedLabel(job) === '—' ? 'var(--color-neutral-500)' : 'var(--color-accent-300)' }">{{ speedLabel(job) }}</span>
       </div>
       <div class="card" style="padding:12px 14px;border-radius:var(--radius-lg)">
         <span style="font-size:11px;color:var(--color-neutral-500)">Tiempo restante</span>
-        <span style="font-size:15px">{{ etaLabel(job) }}</span>
+        <span style="font-size:17px;font-variant-numeric:tabular-nums">{{ etaLabel(job) }}</span>
+      </div>
+      <div class="card" style="padding:12px 14px;border-radius:var(--radius-lg)">
+        <span style="font-size:11px;color:var(--color-neutral-500)">Estado</span>
+        <span style="font-size:14px;text-wrap:pretty">{{ phaseLabel(job) }}</span>
+      </div>
+      <div class="card" style="padding:12px 14px;border-radius:var(--radius-lg)">
+        <span style="font-size:11px;color:var(--color-neutral-500)">Descargado</span>
+        <span style="font-size:14px;font-variant-numeric:tabular-nums">{{ sizeLabel(job) }}</span>
       </div>
     </div>
 

@@ -99,6 +99,10 @@ Para contenido que pide sesión (Instagram, videos con restricción de edad, o c
 
 - **MP4** exige H.264 + AAC, que es lo que acepta la app Fotos. Al terminar, Clipo revisa el archivo con `ffprobe` y, si salió en otro códec (VP9, AV1, audio Opus o H.264 de 10 bits), lo convierte con ffmpeg y copia sin recodificar lo que ya sea compatible.
 - **4K en MP4**: YouTube no ofrece H.264 en 4K (el máximo es 1080p). Clipo baja el 4K real (VP9/AV1) y lo convierte a H.264 al terminar, mostrando el avance de la conversión; tarda bastante más y el archivo final pesa más que el estimado. Con 1080p o menos no hace falta convertir.
+- **Tamaño aproximado siempre visible (`~`):** cada calidad lleva una tasa en bytes por segundo (real si el sitio publica peso o bitrate, o un valor típico si no) y la app la multiplica por la duración, ajustada al formato, a los fps y, en playlists, a los videos elegidos. Es una estimación: con 4K en MP4 el archivo final pesa más por la conversión.
+- **Descargas de cualquier tamaño:** "Descargar a Archivos" es una descarga directa del servidor (con reanudación por `Range`) y no pasa por la memoria del teléfono ni por el service worker. "Guardar en Fotos" sí carga el archivo en memoria: si el teléfono no aguanta uno muy pesado, la app lo avisa y sugiere la descarga directa.
+- **Biblioteca:** miniaturas (el servidor las guarda en `data/thumbs`: la imagen del sitio o, si falla, un fotograma del video), filtros Todo / En curso / Listos, búsqueda, historial agrupado por día, aviso de cuánto le queda a cada archivo y deslizar para ver o borrar.
+- **Velocidad de descarga:** tarjeta propia en la pantalla de cada descarga y junto al porcentaje en la cola; durante la unión o la conversión se muestra la etapa en vez de una velocidad.
 - **Etapas visibles:** la pantalla de cada descarga muestra por separado extraer información, descargar video, descargar audio, unir audio y video y, si hace falta, convertir para iPhone, cada una con su porcentaje.
 - **WEBM y MKV** no se convierten: son para reproducirse fuera de Fotos.
 - Los archivos de más de 300 MB se descargan directo con el gestor de Safari en lugar de cargarse en memoria.

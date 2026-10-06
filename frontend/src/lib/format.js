@@ -6,6 +6,8 @@ export function fmtBytes(bytes) {
   return Math.max(1, Math.round(mb)) + ' MB'
 }
 
+export const fmtApprox = (bytes) => '~' + fmtBytes(bytes)
+
 export function fmtDuration(seconds) {
   if (!seconds) return ''
   const h = Math.floor(seconds / 3600)
@@ -17,7 +19,19 @@ export function fmtDuration(seconds) {
 }
 
 export function fmtSpeed(bytesPerSecond) {
+  if (bytesPerSecond < 1e6) return Math.max(1, Math.round(bytesPerSecond / 1e3)) + ' KB/s'
   return (bytesPerSecond / 1e6).toFixed(1).replace('.', ',') + ' MB/s'
+}
+
+// Velocidad actual de descarga; fuera de la descarga (unión, conversión, pausa) no hay velocidad
+export function speedLabel(job) {
+  return job.status === 'running' && job.speed ? fmtSpeed(job.speed) : '—'
+}
+
+// Qué está haciendo ahora, con el nombre real de la etapa
+export function phaseLabel(job) {
+  if (job.status === 'running') return job.stage || 'Iniciando…'
+  return statusLabel(job)
 }
 
 export function statusLabel(job) {
@@ -27,7 +41,7 @@ export function statusLabel(job) {
     case 'waiting': return 'En espera'
     case 'error': return 'Error'
     case 'expired': return 'Expirado'
-    default: return job.speed ? fmtSpeed(job.speed) : 'Iniciando…'
+    default: return job.speed ? fmtSpeed(job.speed) : job.stage || 'Iniciando…'
   }
 }
 
@@ -82,4 +96,58 @@ export function stageSummary(job) {
 export function fileName(job) {
   const safe = job.title.replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 90) || 'clipo'
   return `${safe}.${job.format.toLowerCase()}`
+}
+
+const MINUTE = 60e3
+const HOUR = 60 * MINUTE
+const DAY = 24 * HOUR
+
+export function relativeTime(iso, now = Date.now()) {
+  if (!iso) return ''
+  const diff = Math.max(0, now - new Date(iso).getTime())
+  if (diff < MINUTE) return 'Ahora'
+  if (diff < HOUR) return `Hace ${Math.floor(diff / MINUTE)} min`
+  if (diff < DAY) return `Hace ${Math.floor(diff / HOUR)} h`
+  const days = Math.floor(diff / DAY)
+  return days === 1 ? 'Ayer' : `Hace ${days} días`
+}
+
+// Los archivos viven poco en el servidor: avisa cuánto les queda
+export function expiresIn(iso, now = Date.now()) {
+  if (!iso) return null
+  const left = new Date(iso).getTime() - now
+  if (left <= 0) return { label: 'Expira pronto', urgent: true }
+  if (left < HOUR) return { label: `Expira en ${Math.ceil(left / MINUTE)} min`, urgent: true }
+  if (left < DAY) return { label: `Expira en ${Math.floor(left / HOUR)} h`, urgent: left < 2 * HOUR }
+  return { label: `Expira en ${Math.floor(left / DAY)} d`, urgent: false }
+}
+
+const startOfDay = (time) => {
+  const date = new Date(time)
+  date.setHours(0, 0, 0, 0)
+  return date.getTime()
+}
+
+export function dayGroup(iso, now = Date.now()) {
+  const days = Math.round((startOfDay(now) - startOfDay(new Date(iso).getTime())) / DAY)
+  if (days <= 0) return 'Hoy'
+  if (days === 1) return 'Ayer'
+  return days < 7 ? 'Esta semana' : 'Antes'
+}
+
+// Más reciente primero, agrupado por día para que la lista se lea como un historial
+export function groupByDay(jobs, now = Date.now()) {
+  const stamp = (job) => new Date(job.finished_at || job.created_at).getTime()
+  const groups = []
+  for (const job of [...jobs].sort((a, b) => stamp(b) - stamp(a))) {
+    const label = dayGroup(job.finished_at || job.created_at, now)
+    const last = groups[groups.length - 1]
+    if (last && last.label === label) last.jobs.push(job)
+    else groups.push({ label, jobs: [job] })
+  }
+  return groups
+}
+
+export function storageUsed(jobs) {
+  return jobs.filter((j) => j.status === 'done').reduce((sum, j) => sum + (j.size_bytes || 0), 0)
 }

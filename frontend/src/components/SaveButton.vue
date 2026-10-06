@@ -27,6 +27,10 @@ const hasPrepared = () => prepared.jobId === props.job.id && prepared.file !== n
 
 const phase = ref(hasPrepared() ? 'ready' : 'idle')
 
+const LARGE_HINT_BYTES = 500e6
+const sizeText = computed(() => (props.job.size_bytes ? fmtBytes(props.job.size_bytes) : ''))
+const isLarge = computed(() => (props.job.size_bytes || 0) > LARGE_HINT_BYTES)
+
 watch(() => props.job.id, () => {
   phase.value = hasPrepared() ? 'ready' : 'idle'
 })
@@ -72,9 +76,13 @@ async function onTap() {
     prepared.jobId = props.job.id
     prepared.file = file
     await openShareSheet()
-  } catch {
+  } catch (error) {
+    // Con archivos muy pesados el teléfono puede quedarse sin memoria: la descarga directa no tiene ese límite
+    console.error('No se pudo preparar el archivo para Fotos:', error)
+    prepared.jobId = null
+    prepared.file = null
     phase.value = 'error'
-    flash('No se pudo traer el archivo del servidor')
+    flash('No se pudo preparar para Fotos (¿archivo muy pesado?). "Descargar a Archivos" funciona con cualquier tamaño.')
   }
 }
 </script>
@@ -103,14 +111,17 @@ async function onTap() {
       :href="downloadUrl"
       :download="downloadName"
       class="btn"
-      :class="canShareFiles ? 'btn-secondary' : 'btn-primary'"
+      :class="canShareFiles && phase !== 'error' ? 'btn-secondary' : 'btn-primary'"
       style="height:48px;border-radius:var(--radius-lg);width:100%;gap:10px;font-size:14px"
     >
       <Icon name="download" :size="16" />
-      Descargar a Archivos
+      Descargar a Archivos<template v-if="sizeText"> · {{ sizeText }}</template>
     </a>
 
-    <p v-if="isIos" style="margin:0;font-size:12px;color:var(--color-neutral-500);text-wrap:pretty">
+    <p v-if="isLarge" style="margin:0;font-size:12px;color:var(--color-neutral-500);text-wrap:pretty">
+      Es un archivo grande. Si "Guardar en Fotos" falla por falta de memoria, usa "Descargar a Archivos": no tiene límite de tamaño.
+    </p>
+    <p v-else-if="isIos" style="margin:0;font-size:12px;color:var(--color-neutral-500);text-wrap:pretty">
       "Guardar en Fotos" pasa el video del servidor a tu teléfono una sola vez. "Descargar a Archivos" es otra copia aparte: usa solo una de las dos.
     </p>
   </div>

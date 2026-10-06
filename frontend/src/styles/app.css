@@ -141,7 +141,6 @@ input::placeholder { color: var(--color-neutral-600); }
   position: relative;
   z-index: 1;
   width: 100%;
-  min-height: 60px;
   cursor: pointer;
   display: flex;
   gap: 12px;
@@ -154,3 +153,16 @@ input::placeholder { color: var(--color-neutral-600); }
 }
 
 .library-swipe-front.is-open { transition-duration: .12s; }
+
+.clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-wrap: pretty;
+}
+
+/* Tarjeta de descarga en curso: si no cabe todo en una línea, los botones pasan abajo */
+.active-top { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.active-main { cursor: pointer; flex: 1 1 210px; min-width: 0; display: flex; gap: 12px; align-items: center; }
+.active-controls { display: flex; gap: 8px; align-items: center; margin-left: auto; }

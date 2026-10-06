@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { detect, isPlaylistUrl } from './platforms.js'
-import { etaLabel, fileName, fmtBytes, fmtDuration, sizeLabel, stageRows, stagesFor, stageSummary, statusLabel } from './format.js'
+import { estimateBytes, estimateTotal, DEFAULT_SECONDS } from './size.js'
+import { dayGroup, etaLabel, fmtSpeed, phaseLabel, speedLabel, expiresIn, fileName, groupByDay, relativeTime, storageUsed, fmtBytes, fmtDuration, sizeLabel, stageRows, stagesFor, stageSummary, statusLabel } from './format.js'
 import { computeDeficit } from './viewport.js'
 import { glowFor, pick } from './styles.js'
 import { readBody } from './download.js'
@@ -163,5 +164,112 @@ describe('déficit de altura en la PWA de iOS', () => {
     expect(computeDeficit({ ...base, standalone: false })).toBe(0)
     expect(computeDeficit({ ...base, innerWidth: 852, innerHeight: 393 })).toBe(0)
     expect(computeDeficit({ ...base, innerHeight: 600 })).toBe(0)
+  })
+})
+
+
+describe('historial de la biblioteca', () => {
+  const NOW = new Date('2026-10-05T15:00:00').getTime()
+  const ago = (ms) => new Date(NOW - ms).toISOString()
+  const H = 3600e3
+
+  it('escribe cuánto hace que se descargó', () => {
+    expect(relativeTime(ago(10e3), NOW)).toBe('Ahora')
+    expect(relativeTime(ago(5 * 60e3), NOW)).toBe('Hace 5 min')
+    expect(relativeTime(ago(3 * H), NOW)).toBe('Hace 3 h')
+    expect(relativeTime(ago(30 * H), NOW)).toBe('Ayer')
+    expect(relativeTime(ago(72 * H), NOW)).toBe('Hace 3 días')
+    expect(relativeTime(null, NOW)).toBe('')
+  })
+  it('avisa cuánto le queda al archivo y marca lo urgente', () => {
+    const inFuture = (ms) => new Date(NOW + ms).toISOString()
+    expect(expiresIn(inFuture(20 * 60e3), NOW)).toEqual({ label: 'Expira en 20 min', urgent: true })
+    expect(expiresIn(inFuture(1.5 * H), NOW)).toEqual({ label: 'Expira en 1 h', urgent: true })
+    expect(expiresIn(inFuture(5 * H), NOW)).toEqual({ label: 'Expira en 5 h', urgent: false })
+    expect(expiresIn(inFuture(-1000), NOW)).toEqual({ label: 'Expira pronto', urgent: true })
+    expect(expiresIn(null, NOW)).toBeNull()
+  })
+  it('clasifica por día natural, no por horas transcurridas', () => {
+    expect(dayGroup('2026-10-05T00:30:00', NOW)).toBe('Hoy')
+    expect(dayGroup('2026-10-04T23:30:00', NOW)).toBe('Ayer')
+    expect(dayGroup('2026-10-01T10:00:00', NOW)).toBe('Esta semana')
+    expect(dayGroup('2026-09-20T10:00:00', NOW)).toBe('Antes')
+  })
+  it('agrupa de más reciente a más antiguo', () => {
+    const jobs = [
+      { id: 'a', finished_at: '2026-10-04T10:00:00' },
+      { id: 'b', finished_at: '2026-10-05T14:00:00' },
+      { id: 'c', finished_at: '2026-10-05T09:00:00' },
+      { id: 'd', created_at: '2026-09-01T09:00:00' },
+    ]
+    const groups = groupByDay(jobs, NOW)
+    expect(groups.map((g) => [g.label, g.jobs.map((j) => j.id)])).toEqual([
+      ['Hoy', ['b', 'c']], ['Ayer', ['a']], ['Antes', ['d']],
+    ])
+  })
+  it('suma solo los archivos que aún están en el servidor', () => {
+    expect(storageUsed([
+      { status: 'done', size_bytes: 100e6 }, { status: 'done', size_bytes: 50e6 }, { status: 'expired', size_bytes: 999e6 },
+    ])).toBe(150e6)
+  })
+})
+
+
+describe('velocidad de descarga', () => {
+  it('usa KB/s por debajo de 1 MB/s y MB/s por encima', () => {
+    expect(fmtSpeed(850e3)).toBe('850 KB/s')
+    expect(fmtSpeed(10)).toBe('1 KB/s')
+    expect(fmtSpeed(3.2e6)).toBe('3,2 MB/s')
+  })
+  it('solo hay velocidad mientras se descarga', () => {
+    expect(speedLabel({ status: 'running', speed: 5e6 })).toBe('5,0 MB/s')
+    expect(speedLabel({ status: 'running', speed: null })).toBe('—')
+    expect(speedLabel({ status: 'paused', speed: 5e6 })).toBe('—')
+    expect(speedLabel({ status: 'done', speed: null })).toBe('—')
+  })
+  it('el estado nombra la etapa en curso en vez de "Iniciando…" durante la unión', () => {
+    expect(phaseLabel({ status: 'running', stage: 'Uniendo audio y video', speed: null })).toBe('Uniendo audio y video')
+    expect(phaseLabel({ status: 'running', stage: null })).toBe('Iniciando…')
+    expect(phaseLabel({ status: 'paused' })).toBe('En pausa')
+    expect(statusLabel({ status: 'running', stage: 'Convirtiendo para iPhone', speed: null })).toBe('Convirtiendo para iPhone')
+  })
+})
+
+
+describe('tamaño aproximado', () => {
+  const q1080 = { id: '1080', bps: 500_000, bps_30: 350_000 }
+  const q4k = { id: '2160', bps: 2_000_000, bps_30: null }
+  const base = { quality: q1080, mode: 'video', format: 'MP4', fps: 60, seconds: 100 }
+
+  it('video: tasa por segundo por duración', () => {
+    expect(estimateBytes(base)).toBe(50_000_000)
+  })
+  it('los fps cambian el peso cuando hay datos de 30 fps', () => {
+    expect(estimateBytes({ ...base, fps: 30 })).toBe(35_000_000)
+    expect(estimateBytes({ ...base, quality: q4k, fps: 30, seconds: 10 })).toBeGreaterThan(0)
+  })
+  it('el formato cambia el peso: WEBM y MKV pesan menos que MP4', () => {
+    const mp4 = estimateBytes(base)
+    expect(estimateBytes({ ...base, format: 'WEBM' })).toBeLessThan(mp4)
+    expect(estimateBytes({ ...base, format: 'MKV' })).toBeLessThan(estimateBytes({ ...base, format: 'WEBM' }))
+  })
+  it('4K en MP4 pesa más porque se convierte a H.264', () => {
+    expect(estimateBytes({ ...base, quality: q4k, fps: null })).toBeGreaterThan(estimateBytes({ ...base, quality: q4k, fps: null, format: 'MKV' }) * 1.5)
+  })
+  it('audio: MP3 usa los kbps elegidos; M4A y OPUS no pasan de su tope', () => {
+    const audio = { mode: 'audio', seconds: 100 }
+    expect(estimateBytes({ ...audio, quality: { id: '320' }, format: 'MP3' })).toBe(4_000_000)
+    expect(estimateBytes({ ...audio, quality: { id: '320' }, format: 'M4A' })).toBe(1_600_000)
+    expect(estimateBytes({ ...audio, quality: { id: '320' }, format: 'OPUS' })).toBe(1_400_000)
+    expect(estimateBytes({ ...audio, quality: { id: '128' }, format: 'M4A' })).toBe(1_600_000)
+  })
+  it('sin duración usa una típica en vez de dejar el tamaño vacío', () => {
+    expect(estimateBytes({ ...base, seconds: null })).toBe(Math.round(500_000 * DEFAULT_SECONDS))
+    expect(estimateBytes({ ...base, seconds: 0 })).toBeGreaterThan(0)
+  })
+  it('playlist: suma los videos elegidos, con duración típica donde falte', () => {
+    const total = estimateTotal({ ...base, durations: [100, 50, null] })
+    expect(total).toBe(50_000_000 + 25_000_000 + Math.round(500_000 * DEFAULT_SECONDS))
+    expect(estimateTotal({ ...base, durations: [] })).toBe(0)
   })
 })
