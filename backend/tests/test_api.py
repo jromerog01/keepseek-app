@@ -220,6 +220,21 @@ def test_clear_finished_removes_done_jobs(client):
     assert client.get("/api/jobs").json() == []
 
 
+def test_clear_finished_keeps_error_jobs_in_queue(client, downloader):
+    downloader.fail_with = "ERROR: [youtube] abc: Video unavailable"
+    failed = create(client)[0]
+    wait_for(client, failed["id"], "error")
+
+    downloader.fail_with = None
+    done = create(client)[0]
+    wait_for(client, done["id"], "done")
+
+    assert client.delete("/api/jobs", params={"status": "done"}).json() == {"removed": 1}
+    listed = client.get("/api/jobs").json()
+    assert [job["id"] for job in listed] == [failed["id"]]
+    assert listed[0]["status"] == "error"
+
+
 def test_pause_all_and_resume_all(client, downloader):
     downloader.gate.clear()
     a, b = create(client)[0], create(client)[0]

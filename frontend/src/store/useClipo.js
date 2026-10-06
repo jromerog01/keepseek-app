@@ -342,13 +342,16 @@ const closeDetail = () => { state.detailId = null }
 const newDownload = () => { state.tab = 'home'; state.view = 'home'; state.detailId = null }
 
 async function runAction(action) {
+  let ok = true
   try {
     await action()
   } catch (error) {
+    ok = false
     flash(error instanceof ApiError ? error.message : 'No se pudo completar la acción')
   }
   await refreshJobs()
   scheduleNextPoll()
+  return ok
 }
 
 const togglePause = (job) =>
@@ -366,8 +369,17 @@ async function cancel(job) {
 
 const pauseAll = () => runAction(() => (anyRunning.value ? api.pauseAll() : api.resumeAll()))
 
-async function clearDone() {
-  await runAction(() => api.clearFinished())
+async function removeFromLibrary(job) {
+  state.jobs = state.jobs.filter((j) => j.id !== job.id)
+  if (state.detailId === job.id) state.detailId = null
+  if (await runAction(() => api.remove(job.id))) flash('Video eliminado de la biblioteca')
+}
+
+async function clearLibrary() {
+  const count = doneJobs.value.length
+  if (await runAction(() => api.clearFinished())) {
+    flash(count === 1 ? 'Biblioteca limpia' : `${count} videos eliminados de la biblioteca`)
+  }
 }
 
 // ---------- enlace compartido (?url=) ----------
@@ -397,7 +409,7 @@ export function useClipo() {
     setUrl, paste, selectPlatform, analyze,
     back, setMode, setQuality, setFormat, setFps, togglePlaylistItem, togglePlaylistAll, download,
     setTab, openDetail, closeDetail, newDownload,
-    togglePause, retry, cancel, pauseAll, clearDone,
+    togglePause, retry, cancel, pauseAll, removeFromLibrary, clearLibrary,
     flash,
   }
 }

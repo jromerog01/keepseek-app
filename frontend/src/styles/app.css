@@ -102,3 +102,55 @@ input::placeholder { color: var(--color-neutral-600); }
 }
 
 .reset { all: unset; box-sizing: border-box; }
+
+.library-swipe {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+}
+
+.library-swipe-actions {
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: 152px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: stretch;
+  background: color-mix(in srgb, var(--color-neutral-900) 72%, transparent);
+}
+
+.library-action {
+  flex-direction: column;
+  gap: 4px;
+  border-radius: 0;
+  border: 0;
+  font-size: 11px;
+  color: var(--color-neutral-300);
+}
+
+.library-action:hover { background: color-mix(in srgb, var(--color-text) 8%, transparent); }
+
+.library-action-danger {
+  color: #ffb4aa;
+  background: color-mix(in srgb, #d73a31 20%, transparent);
+}
+
+.library-action-danger:hover { background: color-mix(in srgb, #d73a31 32%, transparent); }
+
+.library-swipe-front {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  min-height: 60px;
+  cursor: pointer;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 0;
+  background: var(--color-bg);
+  touch-action: pan-y;
+  user-select: none;
+  transition: transform .18s ease;
+}
+
+.library-swipe-front.is-open { transition-duration: .12s; }

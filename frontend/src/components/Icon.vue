@@ -23,6 +23,8 @@ const ICONS = {
   share: { sw: 16, cap: true, join: true, body: '<path d="M128 160V32"></path><path d="M88 72l40-40 40 40"></path><path d="M88 112H64a8 8 0 0 0-8 8v96a8 8 0 0 0 8 8h128a8 8 0 0 0 8-8v-96a8 8 0 0 0-8-8h-24"></path>' },
   retry: { sw: 16, cap: true, join: true, body: '<path d="M200 72a80 80 0 1 0 16 56"></path><path d="M200 32v40h-40"></path>' },
   warn: { sw: 16, cap: true, body: '<circle cx="128" cy="128" r="96"></circle><path d="M128 80v56"></path><path d="M128 172h.01"></path>' },
+  info: { sw: 16, cap: true, body: '<circle cx="128" cy="128" r="96"></circle><path d="M128 116v60"></path><path d="M128 80h.01"></path>' },
+  trash: { sw: 16, cap: true, join: true, body: '<path d="M52 68h152"></path><path d="M96 68V44h64v24"></path><path d="M76 68l12 148h80l12-148"></path><path d="M112 108v64M144 108v64"></path>' },
 }
 
 const icon = computed(() => ICONS[props.name])

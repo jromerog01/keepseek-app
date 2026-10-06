@@ -19,7 +19,7 @@ from app.services.stages import StageTracker
 
 ACTIVE_STATUSES = ("waiting", "running", "paused")
 RESUMABLE_STATUSES = ("paused", "error")
-FINISHED_STATUSES = ("done", "expired", "error")
+LIBRARY_STATUSES = ("done", "expired")
 
 # (inicio %, fin %) de cada etapa, igual que stagesFor() del prototipo
 _VIDEO_RANGES = {"video": (8, 70), "audio": (70, 90), "both": (8, 90)}
@@ -317,7 +317,7 @@ class JobManager:
 
     def clear_finished(self) -> int:
         with self._lock:
-            targets = [j for j in self._jobs.values() if j.status in FINISHED_STATUSES]
+            targets = [j for j in self._jobs.values() if j.status in LIBRARY_STATUSES]
             for job in targets:
                 self._remove(job)
             return len(targets)
