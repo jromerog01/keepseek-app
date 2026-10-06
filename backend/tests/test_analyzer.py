@@ -117,6 +117,11 @@ def test_clean_error_strips_ansi_and_prefixes():
     assert clean_error(exc) == "Video unavailable"
 
 
+def test_clean_error_explains_forbidden_site_blocks():
+    exc = Exception("ERROR: [Example] abc: Unable to download webpage: HTTP Error 403: Forbidden")
+    assert clean_error(exc).startswith("El sitio bloqueó la solicitud (403).")
+
+
 def test_size_estimate_follows_the_codec_the_downloader_will_pick():
     small_h264 = vfmt(1920, 1080, tbr=800, vcodec="avc1.640028", filesize=100)
     big_av1 = vfmt(1920, 1080, tbr=2000, vcodec="av01.0.08M.08", filesize=900)

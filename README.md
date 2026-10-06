@@ -113,7 +113,7 @@ Abre `/diag.html` dentro de la PWA (toca la etiqueta `yt-dlp` de la pantalla de 
 # Backend
 cd backend
 python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
-.venv/bin/pip install -U --pre "yt-dlp[default]"
+.venv/bin/pip install -U --pre "yt-dlp[default,curl-cffi]"
 .venv/bin/python -m pytest
 API_TOKEN=dev SECRET_KEY=dev-secret DATA_DIR=/tmp/clipo SECURE_COOKIES=false STATIC_DIR=../frontend/dist \
   .venv/bin/python -m uvicorn app.main:create_app --factory --reload

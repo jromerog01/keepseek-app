@@ -8,6 +8,7 @@ from app.config import Settings
 from app.models import Job
 from app.services import compat, formats, platforms
 from app.services.job_manager import Reporter
+from app.services.ytdlp_options import browser_request_opts
 
 log = logging.getLogger("clipo")
 
@@ -45,6 +46,7 @@ def ytdlp_download(job: Job, out_dir: Path, reporter: Reporter, *, settings: Set
         out_dir=out_dir,
         cookies_path=settings.cookies_path,
     )
+    opts.update(browser_request_opts(job.url))
 
     def on_progress(data: dict) -> None:
         reporter.check()

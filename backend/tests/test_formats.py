@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 
 from app.services import formats
+from app.services.ytdlp_options import browser_request_opts
 
 OUT = Path("/tmp/out")
 
@@ -80,6 +81,14 @@ def test_cookies_are_added_when_present(tmp_path):
     cookies = tmp_path / "cookies.txt"
     cookies.write_text("")
     assert opts(cookies_path=cookies)["cookiefile"] == str(cookies)
+
+
+def test_browser_request_opts_include_referer_and_browser_headers():
+    result = browser_request_opts("https://videos.example/watch/abc")
+    headers = result["http_headers"]
+    assert headers["Referer"] == "https://videos.example/"
+    assert headers["User-Agent"].startswith("Mozilla/5.0")
+    assert "Accept-Language" in headers
 
 
 @pytest.mark.parametrize(

@@ -35,7 +35,7 @@ RUN pip install -r requirements.txt
 # scripts/rebuild.sh cada noche para traer el yt-dlp nightly más reciente.
 ARG YTDLP_CACHE_BUST=dev
 RUN echo "yt-dlp build: ${YTDLP_CACHE_BUST}" \
-    && pip install -U --pre "yt-dlp[default]" \
+    && pip install -U --pre "yt-dlp[default,curl-cffi]" \
     && python -c "import yt_dlp.version as v; print('yt-dlp', v.__version__)"
 
 COPY backend/app ./app
