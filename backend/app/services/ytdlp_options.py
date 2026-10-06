@@ -3,6 +3,11 @@ from urllib.parse import urlparse
 
 from yt_dlp.utils import std_headers
 
+try:
+    from yt_dlp.networking.impersonate import ImpersonateTarget
+except ImportError:  # pragma: no cover - compatibilidad con yt-dlp viejo
+    ImpersonateTarget = None
+
 
 def _origin(url: str) -> str | None:
     parsed = urlparse(url)
@@ -22,6 +27,6 @@ def browser_request_opts(url: str) -> dict:
         headers["Referer"] = referer
 
     opts = {"http_headers": headers}
-    if find_spec("curl_cffi") is not None:
-        opts["impersonate"] = "chrome"
+    if ImpersonateTarget is not None and find_spec("curl_cffi") is not None:
+        opts["impersonate"] = ImpersonateTarget.from_str("chrome")
     return opts

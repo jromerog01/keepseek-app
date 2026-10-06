@@ -91,6 +91,13 @@ def test_browser_request_opts_include_referer_and_browser_headers():
     assert "Accept-Language" in headers
 
 
+def test_browser_request_opts_can_initialize_ytdlp():
+    from yt_dlp import YoutubeDL
+
+    with YoutubeDL({"quiet": True, **browser_request_opts("https://videos.example/watch/abc")}):
+        pass
+
+
 @pytest.mark.parametrize(
     "mode,quality,fps,fmt",
     [

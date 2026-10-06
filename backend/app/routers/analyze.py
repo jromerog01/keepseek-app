@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
-from yt_dlp.utils import DownloadError, ExtractorError
 
 from app.auth import require_auth
 from app.routers.deps import checked_url
@@ -16,5 +15,5 @@ def analyze(body: AnalyzeRequest, request: Request):
     settings = request.app.state.settings
     try:
         return analyzer.analyze(url, cookies_path=settings.cookies_path)
-    except (DownloadError, ExtractorError) as exc:
+    except Exception as exc:
         raise HTTPException(status_code=422, detail=clean_error(exc))
