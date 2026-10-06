@@ -24,6 +24,8 @@ const canShareFiles = typeof navigator.canShare === 'function' && typeof navigat
 
 const downloadUrl = computed(() => api.fileUrl(props.job.id))
 const downloadName = computed(() => fileName(props.job))
+const isLargeFile = computed(() => props.job.size_bytes > LARGE_FILE_BYTES)
+const showPhotosButton = computed(() => canShareFiles && !isLargeFile.value)
 const hasPrepared = () => prepared.jobId === props.job.id && prepared.file !== null
 
 const phase = ref(hasPrepared() ? 'ready' : 'idle')
@@ -62,11 +64,6 @@ async function openShareSheet() {
 async function onTap() {
   if (hasPrepared()) return openShareSheet()
 
-  if (props.job.size_bytes > LARGE_FILE_BYTES) {
-    flash('El archivo es muy grande para Fotos desde la app: usa "Descargar a Archivos"')
-    return
-  }
-
   phase.value = 'preparing'
   try {
     const file = await fetchFile()
@@ -88,7 +85,7 @@ async function onTap() {
 <template>
   <div style="display:flex;flex-direction:column;gap:10px">
     <button
-      v-if="canShareFiles"
+      v-if="showPhotosButton"
       class="btn btn-primary"
       :disabled="phase === 'preparing'"
       style="height:52px;border-radius:var(--radius-lg);width:100%;gap:10px;font-size:15px;box-shadow:0 0 24px color-mix(in srgb, var(--color-accent) 22%, transparent)"
@@ -109,14 +106,17 @@ async function onTap() {
       :href="downloadUrl"
       :download="downloadName"
       class="btn"
-      :class="canShareFiles ? 'btn-secondary' : 'btn-primary'"
+      :class="showPhotosButton ? 'btn-secondary' : 'btn-primary'"
       style="height:48px;border-radius:var(--radius-lg);width:100%;gap:10px;font-size:14px"
     >
       <Icon name="download" :size="16" />
       Descargar a Archivos
     </a>
 
-    <p v-if="isIos" style="margin:0;font-size:12px;color:var(--color-neutral-500);text-wrap:pretty">
+    <p v-if="isIos && isLargeFile" style="margin:0;font-size:12px;color:var(--color-neutral-500);text-wrap:pretty">
+      Este archivo es grande; Archivos lo guarda sin cargarlo completo dentro de Clipo.
+    </p>
+    <p v-else-if="isIos" style="margin:0;font-size:12px;color:var(--color-neutral-500);text-wrap:pretty">
       "Guardar en Fotos" pasa el video del servidor a tu teléfono una sola vez. "Descargar a Archivos" es otra copia aparte: usa solo una de las dos.
     </p>
   </div>
