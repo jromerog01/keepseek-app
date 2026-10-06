@@ -10,7 +10,7 @@ from fastapi.responses import FileResponse
 from app.auth import LoginLimiter
 from app.config import Settings, get_settings
 from app.db import make_engine
-from app.routers import analyze, auth, jobs, system
+from app.routers import analyze, auth, invites, jobs, system
 from app.services.downloader import ytdlp_download
 from app.services.job_manager import Downloader, JobManager
 from app.services.thumbnails import ThumbnailStore
@@ -26,8 +26,9 @@ def create_app(settings: Settings | None = None, downloader: Downloader | None =
     if not settings.api_token or not settings.secret_key:
         raise RuntimeError("Faltan API_TOKEN y SECRET_KEY en el entorno (.env)")
 
+    engine = make_engine(settings.db_path)
     manager = JobManager(
-        engine=make_engine(settings.db_path),
+        engine=engine,
         downloads_dir=settings.downloads_dir,
         downloader=downloader or partial(ytdlp_download, settings=settings),
         max_concurrent=settings.max_concurrent,
@@ -56,10 +57,12 @@ def create_app(settings: Settings | None = None, downloader: Downloader | None =
     app = FastAPI(title="Clipo", lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None)
     app.state.settings = settings
     app.state.manager = manager
+    app.state.engine = engine
     app.state.login_limiter = LoginLimiter()
 
     app.include_router(system.router)
     app.include_router(auth.router)
+    app.include_router(invites.router)
     app.include_router(analyze.router)
     app.include_router(jobs.router)
 

@@ -1,9 +1,14 @@
+import hashlib
 import secrets
 import time
+from datetime import timedelta
 from collections import defaultdict, deque
 
 from fastapi import HTTPException, Request
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
+from sqlmodel import Session, select
+
+from app.models import Invite, utcnow
 
 COOKIE_NAME = "clipo_session"
 COOKIE_MAX_AGE = 60 * 60 * 24 * 365
@@ -20,27 +25,90 @@ def token_matches(candidate: str | None, expected: str) -> bool:
     return secrets.compare_digest(candidate.encode(), expected.encode())
 
 
-def make_session_cookie(secret_key: str) -> str:
-    return _serializer(secret_key).dumps({"ok": True})
+def make_session_cookie(secret_key: str, invite_id: str | None = None) -> str:
+    payload = {"ok": True}
+    if invite_id:
+        payload["inv"] = invite_id
+    return _serializer(secret_key).dumps(payload)
 
 
-def cookie_is_valid(value: str | None, secret_key: str) -> bool:
+def read_session_cookie(value: str | None, secret_key: str) -> dict | None:
     if not value:
-        return False
+        return None
     try:
-        _serializer(secret_key).loads(value, max_age=COOKIE_MAX_AGE)
+        data = _serializer(secret_key).loads(value, max_age=COOKIE_MAX_AGE)
     except (BadSignature, SignatureExpired):
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def hash_invite_token(token: str) -> str:
+    return hashlib.sha256(token.encode()).hexdigest()
+
+
+def create_invite(engine, label: str, days: float) -> tuple[Invite, str]:
+    token = "clipo-" + secrets.token_urlsafe(12)
+    invite = Invite(
+        id=secrets.token_hex(6),
+        label=label,
+        token_hash=hash_invite_token(token),
+        expires_at=utcnow() + timedelta(days=days),
+    )
+    with Session(engine) as session:
+        session.add(invite)
+        session.commit()
+        session.refresh(invite)
+    return invite, token
+
+
+def invite_is_active(invite: Invite | None) -> bool:
+    if invite is None or invite.revoked:
         return False
-    return True
+    return invite.expires_at.replace(tzinfo=None) > utcnow()
+
+
+def find_invite_by_token(engine, token: str) -> Invite | None:
+    with Session(engine) as session:
+        invite = session.exec(select(Invite).where(Invite.token_hash == hash_invite_token(token))).first()
+    return invite if invite_is_active(invite) else None
+
+
+def touch_invite(engine, invite_id: str) -> None:
+    with Session(engine) as session:
+        invite = session.get(Invite, invite_id)
+        if invite:
+            invite.last_used_at = utcnow()
+            session.add(invite)
+            session.commit()
+
+
+def authorize(request: Request) -> str | None:
+    """Devuelve 'admin' o 'guest' si la petición está autorizada, si no None."""
+    state = request.app.state
+    if token_matches(request.headers.get("x-api-key"), state.settings.api_token):
+        return "admin"
+    data = read_session_cookie(request.cookies.get(COOKIE_NAME), state.settings.secret_key)
+    if data is None:
+        return None
+    invite_id = data.get("inv")
+    if not invite_id:
+        return "admin"
+    with Session(state.engine) as session:
+        invite = session.get(Invite, invite_id)
+    return "guest" if invite_is_active(invite) else None
 
 
 def require_auth(request: Request) -> None:
-    settings = request.app.state.settings
-    if token_matches(request.headers.get("x-api-key"), settings.api_token):
-        return
-    if cookie_is_valid(request.cookies.get(COOKIE_NAME), settings.secret_key):
-        return
-    raise HTTPException(status_code=401, detail="No autorizado")
+    if authorize(request) is None:
+        raise HTTPException(status_code=401, detail="No autorizado")
+
+
+def require_admin(request: Request) -> None:
+    role = authorize(request)
+    if role is None:
+        raise HTTPException(status_code=401, detail="No autorizado")
+    if role != "admin":
+        raise HTTPException(status_code=403, detail="Solo el administrador")
 
 
 class LoginLimiter:

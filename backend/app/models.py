@@ -39,3 +39,15 @@ class Job(SQLModel, table=True):
 
     created_at: datetime = Field(default_factory=utcnow)
     finished_at: datetime | None = None
+
+
+class Invite(SQLModel, table=True):
+    """Acceso temporal para que un amigo pruebe la app."""
+
+    id: str = Field(primary_key=True)
+    label: str
+    token_hash: str = Field(index=True, unique=True)
+    created_at: datetime = Field(default_factory=utcnow)
+    expires_at: datetime
+    revoked: bool = False
+    last_used_at: datetime | None = None

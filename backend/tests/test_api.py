@@ -350,3 +350,36 @@ def test_file_supports_partial_downloads_so_any_size_can_resume(client):
 
     tail = client.get(f"/api/jobs/{job['id']}/file", headers={"Range": "bytes=2000-"})
     assert tail.status_code == 206 and tail.content == full.content[2000:]
+
+
+# ---------- invitaciones ----------
+
+def test_invite_lifecycle(client):
+    created = client.post("/api/invites", json={"label": "Ana", "days": 3})
+    assert created.status_code == 201
+    token = created.json()["token"]
+    invite_id = created.json()["id"]
+
+    guest = TestClient(client.app)
+    assert guest.post("/api/auth/login", json={"token": token}).status_code == 200
+    assert guest.get("/api/auth/me").json()["role"] == "guest"
+    assert guest.get("/api/jobs").status_code == 200
+    assert guest.get("/api/invites").status_code == 403
+
+    assert client.delete(f"/api/invites/{invite_id}").status_code == 204
+    assert guest.get("/api/jobs").status_code == 401
+    assert TestClient(client.app).post("/api/auth/login", json={"token": token}).status_code == 401
+
+
+def test_expired_invite_is_rejected(client):
+    from datetime import timedelta
+    from sqlmodel import Session
+    from app.models import Invite, utcnow
+
+    token = client.post("/api/invites", json={"label": "Beto"}).json()["token"]
+    with Session(client.app.state.engine) as session:
+        invite = session.exec(__import__("sqlmodel").select(Invite)).first()
+        invite.expires_at = utcnow() - timedelta(seconds=1)
+        session.add(invite)
+        session.commit()
+    assert TestClient(client.app).post("/api/auth/login", json={"token": token}).status_code == 401
