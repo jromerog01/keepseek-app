@@ -334,3 +334,19 @@ def test_app_refuses_to_start_without_secrets(tmp_path):
 
     with pytest.raises(RuntimeError):
         create_app(make_settings(tmp_path, api_token=""))
+
+
+def test_file_supports_partial_downloads_so_any_size_can_resume(client):
+    job = create(client)[0]
+    wait_for(client, job["id"], "done")
+
+    full = client.get(f"/api/jobs/{job['id']}/file")
+    assert full.headers["accept-ranges"] == "bytes" and len(full.content) == 2048
+
+    part = client.get(f"/api/jobs/{job['id']}/file", headers={"Range": "bytes=100-199"})
+    assert part.status_code == 206
+    assert part.headers["content-range"] == "bytes 100-199/2048"
+    assert part.content == full.content[100:200]
+
+    tail = client.get(f"/api/jobs/{job['id']}/file", headers={"Range": "bytes=2000-"})
+    assert tail.status_code == 206 and tail.content == full.content[2000:]

@@ -55,6 +55,8 @@ def ytdlp_download(job: Job, out_dir: Path, reporter: Reporter, *, settings: Set
             title=info.get("title"),
             uploader=info.get("uploader") or info.get("channel"),
             platform=platforms.from_extractor(info.get("extractor_key"), job.url),
+            thumbnail=info.get("thumbnail"),
+            duration=info.get("duration"),
         )
         key = data.get("filename") or info.get("format_id") or "stream"
         kind = _stream_kind(info)

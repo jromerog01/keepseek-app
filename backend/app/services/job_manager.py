@@ -1,4 +1,5 @@
 import itertools
+import logging
 import shutil
 import threading
 import time
@@ -16,6 +17,9 @@ from app.models import Job, utcnow
 from app.services import formats, platforms
 from app.services.errors import clean_error
 from app.services.stages import StageTracker
+from app.services.thumbnails import ThumbnailStore, fetch_remote, from_video
+
+log = logging.getLogger("clipo")
 
 ACTIVE_STATUSES = ("waiting", "running", "paused")
 RESUMABLE_STATUSES = ("paused", "error")
@@ -47,11 +51,22 @@ class Reporter:
         if action:
             raise JobInterrupted(action)
 
-    def meta(self, title: str | None = None, uploader: str | None = None, platform: dict | None = None) -> None:
+    def meta(
+        self,
+        title: str | None = None,
+        uploader: str | None = None,
+        platform: dict | None = None,
+        thumbnail: str | None = None,
+        duration: float | None = None,
+    ) -> None:
         if title and self.job.title != title:
             self.job.title = title
         if uploader and not self.job.uploader:
             self.job.uploader = uploader
+        if duration and not self.job.duration:
+            self.job.duration = int(duration)
+        if thumbnail:
+            self._manager.request_thumbnail(self.job, thumbnail)
         if platform and self.job.platform_id == "other":
             self.job.platform_id = platform["id"]
             self.job.mono = platform["mono"]
@@ -131,8 +146,13 @@ class JobManager:
         max_concurrent: int = 2,
         file_ttl_hours: int = 6,
         history_days: int = 30,
+        thumbnails: ThumbnailStore | None = None,
+        allow_private_urls: bool = False,
     ):
         self._engine = engine
+        self._thumbs = thumbnails or ThumbnailStore(downloads_dir.parent / "thumbs")
+        self._allow_private = allow_private_urls
+        self._thumb_attempts: set[str] = set()
         self._downloads = downloads_dir
         self._downloader = downloader
         self._max_concurrent = max_concurrent
@@ -199,6 +219,42 @@ class JobManager:
 
     def pending_action(self, job_id: str) -> str | None:
         return self._flags.get(job_id)
+
+    def has_thumbnail(self, job_id: str) -> bool:
+        return self._thumbs.has(job_id)
+
+    def thumbnail_path(self, job_id: str) -> Path | None:
+        path = self._thumbs.path(job_id)
+        return path if path.is_file() else None
+
+    def request_thumbnail(self, job: Job, url: str | None) -> None:
+        """Trae la miniatura del sitio en segundo plano, una sola vez por job."""
+        if not url:
+            return
+        if job.thumbnail is None:
+            job.thumbnail = url
+        with self._lock:
+            if job.id in self._thumb_attempts or self._thumbs.has(job.id):
+                return
+            self._thumb_attempts.add(job.id)
+        threading.Thread(target=self._fetch_thumbnail, args=(job.id, url), daemon=True, name="clipo-thumb").start()
+
+    def _fetch_thumbnail(self, job_id: str, url: str) -> None:
+        try:
+            fetch_remote(url, self._thumbs.path(job_id), self._allow_private)
+        except Exception:
+            log.exception("Falló la descarga de la miniatura de %s", job_id)
+        if job_id not in self._jobs:
+            self._thumbs.delete(job_id)
+
+    def _ensure_thumbnail(self, job: Job, path: Path) -> None:
+        """Si el sitio no dio miniatura, saca un fotograma del propio video."""
+        if self._thumbs.has(job.id) or job.mode != "video":
+            return
+        try:
+            from_video(path, self._thumbs.path(job.id), job.duration)
+        except Exception:
+            log.exception("No se pudo sacar un fotograma de %s", path.name)
 
     def stages_for(self, job_id: str) -> list[dict] | None:
         tracker = self._trackers.get(job_id)
@@ -270,6 +326,7 @@ class JobManager:
             self._persist(job)
             self._schedule()
             self._cond.notify_all()
+        self.request_thumbnail(job, thumbnail)
         return job
 
     def pause(self, job_id: str) -> Job:
@@ -345,6 +402,12 @@ class JobManager:
                 if folder.is_dir() and folder.name not in known and stale:
                     shutil.rmtree(folder, ignore_errors=True)
 
+        known = set(self._jobs)
+        for orphan in self._thumbs.ids() - known:
+            path = self._thumbs.path(orphan)
+            if time.time() - path.stat().st_mtime > 86400:
+                path.unlink(missing_ok=True)
+
     # ---------- internos ----------
 
     def _persist(self, job: Job) -> None:
@@ -367,6 +430,8 @@ class JobManager:
         self._order.pop(job.id, None)
         self._flags.pop(job.id, None)
         self._trackers.pop(job.id, None)
+        self._thumb_attempts.discard(job.id)
+        self._thumbs.delete(job.id)
         shutil.rmtree(self._downloads / job.id, ignore_errors=True)
         self._delete_row(job.id)
         self._schedule()
@@ -400,6 +465,7 @@ class JobManager:
         except Exception as exc:
             self._finish_failed(job, exc)
         else:
+            self._ensure_thumbnail(job, path)
             self._finish_ok(job, path)
 
     def _finish_ok(self, job: Job, path: Path) -> None:

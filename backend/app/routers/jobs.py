@@ -13,7 +13,8 @@ router = APIRouter(prefix="/api", tags=["jobs"], dependencies=[Depends(require_a
 
 def _out(request: Request, job: Job) -> JobOut:
     state = request.app.state
-    return JobOut.from_job(job, state.settings.file_ttl_hours, state.manager.stages_for(job.id))
+    manager = state.manager
+    return JobOut.from_job(job, state.settings.file_ttl_hours, manager.stages_for(job.id), manager.has_thumbnail(job.id))
 
 
 def _get_or_404(manager: JobManager, job_id: str) -> Job:
@@ -140,6 +141,15 @@ def resume_job(job_id: str, request: Request, manager: JobManager = Depends(get_
 def delete_job(job_id: str, manager: JobManager = Depends(get_manager)):
     _get_or_404(manager, job_id)
     manager.cancel(job_id)
+
+
+@router.get("/jobs/{job_id}/thumbnail")
+def job_thumbnail(job_id: str, manager: JobManager = Depends(get_manager)):
+    _get_or_404(manager, job_id)
+    path = manager.thumbnail_path(job_id)
+    if path is None:
+        raise HTTPException(status_code=404, detail="Este video no tiene miniatura")
+    return FileResponse(path, media_type="image/jpeg", headers={"Cache-Control": "private, max-age=86400"})
 
 
 @router.get("/jobs/{job_id}/file")

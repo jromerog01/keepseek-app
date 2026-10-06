@@ -3,3 +3,4 @@ uvicorn[standard]==0.37.*
 sqlmodel==0.0.25
 pydantic-settings==2.11.*
 itsdangerous==2.2.*
+requests>=2.32

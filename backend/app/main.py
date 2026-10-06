@@ -13,6 +13,7 @@ from app.db import make_engine
 from app.routers import analyze, auth, jobs, system
 from app.services.downloader import ytdlp_download
 from app.services.job_manager import Downloader, JobManager
+from app.services.thumbnails import ThumbnailStore
 
 log = logging.getLogger("clipo")
 
@@ -32,6 +33,8 @@ def create_app(settings: Settings | None = None, downloader: Downloader | None =
         max_concurrent=settings.max_concurrent,
         file_ttl_hours=settings.file_ttl_hours,
         history_days=settings.history_days,
+        thumbnails=ThumbnailStore(settings.data_dir / "thumbs"),
+        allow_private_urls=settings.allow_private_urls,
     )
 
     async def cleanup_loop() -> None:

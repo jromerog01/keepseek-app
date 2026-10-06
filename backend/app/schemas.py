@@ -82,9 +82,10 @@ class JobOut(BaseModel):
     expires_at: str | None
     file_available: bool
     stages: list[StageOut] | None = None
+    has_thumbnail: bool = False
 
     @classmethod
-    def from_job(cls, job: Job, ttl_hours: int, stages: list[dict] | None = None) -> "JobOut":
+    def from_job(cls, job: Job, ttl_hours: int, stages: list[dict] | None = None, has_thumbnail: bool = False) -> "JobOut":
         eta = None
         if job.status == "running" and job.speed and job.total_bytes:
             remaining = max(job.total_bytes - job.downloaded_bytes, 0)
@@ -123,4 +124,5 @@ class JobOut(BaseModel):
             expires_at=expires_at,
             file_available=job.status == "done" and bool(job.filename),
             stages=stages,
+            has_thumbnail=has_thumbnail,
         )
