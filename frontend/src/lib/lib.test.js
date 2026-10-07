@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { detect, isPlaylistUrl } from './platforms.js'
 import { estimateBytes, estimateTotal, DEFAULT_SECONDS } from './size.js'
-import { dayGroup, etaLabel, fmtSpeed, phaseLabel, speedLabel, expiresIn, fileName, groupByDay, relativeTime, storageUsed, fmtBytes, fmtDuration, groupByOwner, sizeLabel, stageRows, stagesFor, stageSummary, statusLabel } from './format.js'
+import { dayGroup, etaLabel, fmtSpeed, phaseLabel, speedLabel, expiresIn, fileName, groupByDay, relativeTime, storageUsed, fmtBytes, fmtDuration, groupByOwner, timeLeft, sizeLabel, stageRows, stagesFor, stageSummary, statusLabel } from './format.js'
 import { computeDeficit } from './viewport.js'
 import { glowFor, pick } from './styles.js'
 import { readBody } from './download.js'
@@ -285,5 +285,18 @@ describe('groupByOwner', () => {
     const groups = groupByOwner(jobs)
     expect(groups.map((g) => g.label)).toEqual(['Token original', 'Ana', 'Beto'])
     expect(groups[2].jobs.map((j) => j.id)).toEqual([1, 4])
+  })
+})
+
+describe('timeLeft', () => {
+  const now = Date.parse('2026-10-07T12:00:00Z')
+  it('muestra días, horas o minutos según lo que quede', () => {
+    expect(timeLeft('2026-10-10T16:30:00Z', now)).toBe('3 d 4 h')
+    expect(timeLeft('2026-10-09T12:00:00Z', now)).toBe('2 d')
+    expect(timeLeft('2026-10-07T17:20:00Z', now)).toBe('5 h 20 min')
+    expect(timeLeft('2026-10-07T12:00:30Z', now)).toBe('1 min')
+  })
+  it('devuelve null si ya venció', () => {
+    expect(timeLeft('2026-10-07T11:59:00Z', now)).toBeNull()
   })
 })

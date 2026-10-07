@@ -168,3 +168,15 @@ export function fmtDateTime(iso) {
   if (!iso) return ''
   return new Date(iso).toLocaleString('es', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 }
+
+// Tiempo que le queda a un acceso: "3 d 4 h", "5 h 20 min", "12 min"; null si ya venció
+export function timeLeft(iso, now = Date.now()) {
+  const ms = new Date(iso).getTime() - now
+  if (!(ms > 0)) return null
+  const minutes = Math.max(1, Math.floor(ms / 60000))
+  const days = Math.floor(minutes / 1440)
+  const hours = Math.floor((minutes % 1440) / 60)
+  if (days) return hours ? `${days} d ${hours} h` : `${days} d`
+  if (hours) return minutes % 60 ? `${hours} h ${minutes % 60} min` : `${hours} h`
+  return `${minutes} min`
+}

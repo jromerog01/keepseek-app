@@ -72,5 +72,7 @@ export const api = {
   listInvites: () => request('/invites'),
   createInvite: (label, days) => request('/invites', { method: 'POST', body: { label, days } }),
   revokeInvite: (id) => request(`/invites/${id}`, { method: 'DELETE' }),
+  deleteInvite: (id) => request(`/invites/${id}/purge`, { method: 'DELETE' }),
+  deleteInactiveInvites: () => request('/invites', { method: 'DELETE' }),
   fileUrl: (id) => `/api/jobs/${id}/file`,
 }

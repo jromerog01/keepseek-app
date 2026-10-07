@@ -399,6 +399,26 @@ async function revokeInvite(invite) {
   await refreshInvites()
 }
 
+async function deleteInvite(invite) {
+  try {
+    await api.deleteInvite(invite.id)
+    flash('Acceso borrado')
+  } catch (error) {
+    flash(error instanceof ApiError ? error.message : 'No se pudo borrar el acceso')
+  }
+  await refreshInvites()
+}
+
+async function deleteInactiveInvites() {
+  try {
+    const { removed } = await api.deleteInactiveInvites()
+    flash(removed === 1 ? '1 acceso borrado' : `${removed} accesos borrados`)
+  } catch (error) {
+    flash(error instanceof ApiError ? error.message : 'No se pudieron borrar los accesos')
+  }
+  await refreshInvites()
+}
+
 const dismissNewInvite = () => { state.newInvite = null }
 
 const openDetail = (id) => { state.tab = 'queue'; state.detailId = id }
@@ -472,7 +492,7 @@ export function useClipo() {
     toggleTheme, setTheme,
     setUrl, paste, selectPlatform, analyze,
     back, setMode, setQuality, setFormat, setFps, togglePlaylistItem, togglePlaylistAll, download,
-    refreshInvites, createInvite, revokeInvite, dismissNewInvite,
+    refreshInvites, createInvite, revokeInvite, deleteInvite, deleteInactiveInvites, dismissNewInvite,
     setTab, openDetail, closeDetail, newDownload,
     togglePause, retry, cancel, pauseAll, removeFromLibrary, clearLibrary,
     flash,

@@ -476,3 +476,34 @@ def test_jobs_record_device_and_owner_label(client):
 
     labels = {j["id"]: j["owner_label"] for j in client.get("/api/jobs").json()}
     assert labels == {pixel["id"]: "Token original", admin["id"]: "Token original", own["id"]: "Ana"}
+
+
+def test_invite_token_can_be_shown_again_and_inactive_ones_deleted(client):
+    from datetime import timedelta
+    from sqlmodel import Session
+    from app.models import Invite, utcnow
+
+    created = client.post("/api/invites", json={"label": "Caro", "days": 2}).json()
+    listed = {i["id"]: i for i in client.get("/api/invites").json()}
+    assert listed[created["id"]]["token"] == created["token"]
+
+    guest = TestClient(client.app)
+    assert guest.post("/api/auth/login", json={"token": created["token"]}).status_code == 200
+    job = guest.post("/api/jobs", json={"url": "https://example.com/c"}).json()[0]["id"]
+
+    assert client.delete(f"/api/invites/{created['id']}/purge").status_code == 409
+    expired = client.post("/api/invites", json={"label": "Dani"}).json()
+    with Session(client.app.state.engine) as session:
+        invite = session.get(Invite, expired["id"])
+        invite.expires_at = utcnow() - timedelta(seconds=1)
+        session.add(invite)
+        session.commit()
+
+    assert client.delete("/api/invites").json() == {"removed": 1}
+    assert [i["id"] for i in client.get("/api/invites").json()] == [created["id"]]
+
+    assert client.delete(f"/api/invites/{created['id']}").status_code == 204
+    assert client.delete(f"/api/invites/{created['id']}/purge").status_code == 204
+    assert client.get("/api/invites").json() == []
+    assert guest.get("/api/jobs").status_code == 401
+    assert client.get(f"/api/jobs/{job}").json()["owner_label"] == "Caro"

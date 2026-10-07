@@ -1,9 +1,11 @@
+import base64
 import hashlib
 import secrets
 import time
 from datetime import timedelta
 from collections import defaultdict, deque
 
+from cryptography.fernet import Fernet, InvalidToken
 from fastapi import HTTPException, Request
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 from sqlmodel import Session, select
@@ -47,12 +49,28 @@ def hash_invite_token(token: str) -> str:
     return hashlib.sha256(token.encode()).hexdigest()
 
 
-def create_invite(engine, label: str, days: float) -> tuple[Invite, str]:
+def _fernet(secret_key: str) -> Fernet:
+    digest = hashlib.sha256(("clipo-invite-tokens:" + secret_key).encode()).digest()
+    return Fernet(base64.urlsafe_b64encode(digest))
+
+
+def reveal_invite_token(invite: Invite, secret_key: str) -> str | None:
+    """Token en claro, o None si es una invitación vieja o cambió SECRET_KEY."""
+    if not invite.token_enc:
+        return None
+    try:
+        return _fernet(secret_key).decrypt(invite.token_enc.encode()).decode()
+    except InvalidToken:
+        return None
+
+
+def create_invite(engine, secret_key: str, label: str, days: float) -> tuple[Invite, str]:
     token = "clipo-" + secrets.token_urlsafe(12)
     invite = Invite(
         id=secrets.token_hex(6),
         label=label,
         token_hash=hash_invite_token(token),
+        token_enc=_fernet(secret_key).encrypt(token.encode()).decode(),
         expires_at=utcnow() + timedelta(days=days),
     )
     with Session(engine) as session:
@@ -63,7 +81,7 @@ def create_invite(engine, label: str, days: float) -> tuple[Invite, str]:
 
 
 def invite_is_active(invite: Invite | None) -> bool:
-    if invite is None or invite.revoked:
+    if invite is None or invite.revoked or invite.deleted:
         return False
     return invite.expires_at.replace(tzinfo=None) > utcnow()
 

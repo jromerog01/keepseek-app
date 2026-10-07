@@ -54,3 +54,7 @@ class Invite(SQLModel, table=True):
     expires_at: datetime
     revoked: bool = False
     last_used_at: datetime | None = None
+    # Token cifrado con SECRET_KEY para poder volver a copiarlo (las viejas no lo tienen)
+    token_enc: str | None = None
+    # Borrada de la lista; se conserva para que sus descargas sigan mostrando el nombre
+    deleted: bool = False
