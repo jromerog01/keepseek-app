@@ -36,6 +36,7 @@ class JobCreate(BaseModel):
 class QuickRequest(BaseModel):
     url: str = Field(min_length=1, max_length=2048)
     mode: Mode = "video"
+    quality: str | None = None
 
 
 class LoginRequest(BaseModel):

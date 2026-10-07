@@ -1,3 +1,5 @@
+import re
+
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import FileResponse
 
@@ -68,8 +70,15 @@ def create_jobs(body: JobCreate, request: Request, manager: JobManager = Depends
 @router.post("/quick", status_code=201)
 def quick(body: QuickRequest, request: Request, manager: JobManager = Depends(get_manager)):
     options = formats.quick_options()
-    if body.mode == "audio":
+    choice = (body.quality or "").strip()
+    if body.mode == "audio" or choice.upper().startswith("MP3"):
         options = {"mode": "audio", "quality": "320", "fps": None, "fmt": "MP3"}
+    elif choice:
+        options["quality"] = re.match(r"\d*", choice).group() or choice
+    try:
+        formats.validate_options(options["mode"], options["quality"], options["fps"], options["fmt"])
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
     job = manager.create(
         url=checked_url(request, body.url),
         mode=options["mode"],

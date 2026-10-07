@@ -53,6 +53,17 @@ Crea un atajo nuevo con estas acciones, en este orden. Donde diga **(encabezado)
 
 En **Detalles del atajo** (el botón *i*) activa **Mostrar en la hoja para compartir** y deja como tipos *URLs* y *Texto*.
 
+### Menú de calidad (opcional)
+
+Para elegir la calidad al compartir, con las opciones reales de ese video (un TikTok no ofrece 4K):
+
+1. Después de **Obtener URLs**, agrega **Obtener contenido de URL**: POST a `https://clipo.jromerog.dev/api/quick/options`, mismo encabezado, cuerpo JSON `url` = *URLs*.
+2. **Obtener valor del diccionario**: clave `options`.
+3. **Elegir de la lista** con ese valor.
+4. En el cuerpo JSON del paso 3 (`/api/quick`) agrega un campo **Texto** `quality` con la variable *Elemento elegido*.
+
+`/api/quick/options` devuelve textos como `1080p · Full HD · ~38 MB` y al final `MP3 · solo audio`. `/api/quick` acepta ese texto tal cual en `quality`: usa el número del principio, o baja solo audio si empieza con `MP3`. Con la opción MP3, cambia *Guardar en el álbum de fotos* por *Guardar archivo*.
+
 ### Variante de solo audio (MP3)
 
 Duplica el atajo y haz dos cambios:

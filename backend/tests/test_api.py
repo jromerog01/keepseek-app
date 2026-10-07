@@ -199,6 +199,34 @@ def test_quick_audio_preset(client):
     assert (job["mode"], job["quality"], job["format"]) == ("audio", "320", "MP3")
 
 
+def test_quick_accepts_a_custom_quality(client):
+    job = client.post("/api/quick", json={"url": URL, "quality": "720"}).json()
+    assert (job["mode"], job["quality"], job["format"]) == ("video", "720", "MP4")
+    assert client.post("/api/quick", json={"url": URL, "quality": "999"}).status_code == 422
+
+
+def test_quick_accepts_a_menu_label(client):
+    job = client.post("/api/quick", json={"url": URL, "quality": "720p · HD · ~40 MB"}).json()
+    assert (job["mode"], job["quality"]) == ("video", "720")
+    audio = client.post("/api/quick", json={"url": URL, "quality": "MP3 · solo audio"}).json()
+    assert (audio["mode"], audio["format"]) == ("audio", "MP3")
+
+
+def test_quick_options_lists_real_qualities(client, monkeypatch):
+    from app.services import analyzer
+
+    info = {
+        "title": "Clip",
+        "video_qualities": [
+            {"id": "720", "sub": "HD", "size_bytes": 40_000_000},
+            {"id": "480", "sub": "SD", "size_bytes": None},
+        ],
+    }
+    monkeypatch.setattr(analyzer, "analyze", lambda url, cookies_path=None: info)
+    body = client.post("/api/quick/options", json={"url": URL}).json()
+    assert body["options"] == ["720p · HD · ~40 MB", "480p · SD", "MP3 · solo audio"]
+
+
 def test_invalid_options_are_rejected(client):
     assert client.post("/api/jobs", json={"url": URL, "quality": "999"}).status_code == 422
     assert client.post("/api/jobs", json={"url": URL, "mode": "audio", "format": "MP4", "quality": "320"}).status_code == 422

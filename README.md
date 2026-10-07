@@ -89,7 +89,8 @@ Autenticación: header `X-API-Key: <API_TOKEN>` (Atajo) o cookie de sesión (PWA
 | DELETE | `/api/jobs/{id}` | Cancelar o borrar del historial |
 | DELETE | `/api/jobs?status=done` | Limpiar terminados |
 | GET | `/api/jobs/{id}/file` | El archivo (soporta `Range`) |
-| POST | `/api/quick` | `{url, mode?}` → preset para iPhone (MP4 H.264 ≤1080p, o MP3) |
+| POST | `/api/quick` | `{url, mode?, quality?}` → preset para iPhone (MP4 H.264, 1080p por defecto, o MP3) |
+| POST | `/api/quick/options` | `{url}` → `{title, options[]}` con las calidades reales del video para un menú del Atajo |
 
 ## Cookies (opcional)
 
