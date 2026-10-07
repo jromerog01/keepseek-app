@@ -199,10 +199,11 @@ class JobManager:
 
     # ---------- consultas ----------
 
-    def all_jobs(self) -> list[Job]:
+    def all_jobs(self, owner: str | None = None) -> list[Job]:
+        """`owner=None` devuelve todas; con un dueño, solo las suyas."""
         with self._lock:
             return sorted(
-                self._jobs.values(),
+                (j for j in self._jobs.values() if owner is None or j.owner == owner),
                 key=lambda j: (-j.created_at.timestamp(), self._order.get(j.id, 0)),
             )
 
@@ -296,6 +297,7 @@ class JobManager:
         duration: int | None = None,
         size_estimate: int | None = None,
         source: str = "pwa",
+        owner: str = "admin",
         created_at: datetime | None = None,
     ) -> Job:
         formats.validate_options(mode, quality, fps, fmt)
@@ -318,6 +320,7 @@ class JobManager:
             size_estimate=size_estimate,
             total_bytes=size_estimate,
             source=source,
+            owner=owner,
             created_at=created_at or utcnow(),
         )
         with self._lock:
@@ -352,15 +355,15 @@ class JobManager:
                 self._cond.notify_all()
             return job
 
-    def pause_all(self) -> None:
+    def pause_all(self, owner: str | None = None) -> None:
         with self._lock:
-            for job in list(self._jobs.values()):
+            for job in self.all_jobs(owner):
                 if job.status in ("waiting", "running"):
                     self.pause(job.id)
 
-    def resume_all(self) -> None:
+    def resume_all(self, owner: str | None = None) -> None:
         with self._lock:
-            for job in list(self._jobs.values()):
+            for job in self.all_jobs(owner):
                 if job.status == "paused":
                     self.resume(job.id)
 
@@ -372,9 +375,9 @@ class JobManager:
                 return
             self._remove(job)
 
-    def clear_finished(self) -> int:
+    def clear_finished(self, owner: str | None = None) -> int:
         with self._lock:
-            targets = [j for j in self._jobs.values() if j.status in LIBRARY_STATUSES]
+            targets = [j for j in self.all_jobs(owner) if j.status in LIBRARY_STATUSES]
             for job in targets:
                 self._remove(job)
             return len(targets)

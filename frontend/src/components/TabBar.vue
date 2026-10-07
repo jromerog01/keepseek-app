@@ -1,14 +1,16 @@
 <script setup>
+import { computed } from 'vue'
 import { pick } from '../lib/styles.js'
 import { useClipo } from '../store/useClipo.js'
 import Icon from './Icon.vue'
 
-const { state, badgeCount, setTab } = useClipo()
+const { state, isAdmin, badgeCount, setTab } = useClipo()
 
-const tabs = [
+const tabs = computed(() => [
   { id: 'home', label: 'Inicio', icon: 'home' },
   { id: 'queue', label: 'Biblioteca', icon: 'library' },
-]
+  ...(isAdmin.value ? [{ id: 'access', label: 'Accesos', icon: 'key' }] : []),
+])
 </script>
 
 <template>
@@ -16,7 +18,7 @@ const tabs = [
     style="position:absolute;left:0;right:0;bottom:0;height:var(--tabbar-h);background:color-mix(in srgb, var(--color-bg) 92%, transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);z-index:5"
   >
     <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(to right, transparent, var(--color-neutral-800) 48px, var(--color-neutral-800) calc(100% - 48px), transparent)"></div>
-    <div class="col" style="padding:8px min(60px, 15vw) 0;display:grid;grid-template-columns:repeat(2,1fr)">
+    <div class="col" :style="{ gridTemplateColumns: `repeat(${tabs.length}, 1fr)` }" style="padding:8px min(60px, 15vw) 0;display:grid">
       <button
         v-for="tab in tabs"
         :key="tab.id"

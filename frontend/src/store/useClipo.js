@@ -24,6 +24,9 @@ function readTheme() {
 const state = reactive({
   booting: true,
   authed: false,
+  role: null,
+  invites: [],
+  newInvite: null,
   loginBusy: false,
   loginError: null,
   theme: readTheme(),
@@ -75,7 +78,12 @@ function flash(message) {
 // ---------- datos derivados ----------
 
 const detail = computed(() => state.jobs.find((j) => j.id === state.detailId) || null)
-const screen = computed(() => (state.tab === 'home' ? state.view : detail.value ? 'progress' : 'queue'))
+const isAdmin = computed(() => state.role === 'admin')
+const screen = computed(() => {
+  if (state.tab === 'home') return state.view
+  if (state.tab === 'access' && isAdmin.value) return 'access'
+  return detail.value ? 'progress' : 'queue'
+})
 const activeJobs = computed(() => state.jobs.filter((j) => ACTIVE.includes(j.status)))
 const doneJobs = computed(() => state.jobs.filter((j) => j.status === 'done' || j.status === 'expired'))
 const badgeCount = computed(() => state.jobs.filter((j) => IN_PROGRESS.includes(j.status)).length)
@@ -160,7 +168,7 @@ onUnauthorized(() => {
 async function boot() {
   applyTheme()
   try {
-    await api.me()
+    state.role = (await api.me()).role
     state.authed = true
     await afterLogin()
   } catch {
@@ -182,6 +190,7 @@ async function login(token) {
   state.loginError = null
   try {
     await api.login(token)
+    state.role = (await api.me()).role
     state.authed = true
     await afterLogin()
     consumeSharedUrl()
@@ -195,7 +204,11 @@ async function login(token) {
 async function logout() {
   await api.logout().catch(() => {})
   state.authed = false
+  state.role = null
   state.jobs = []
+  state.invites = []
+  state.newInvite = null
+  state.tab = 'home'
   stopPolling()
 }
 
@@ -351,7 +364,42 @@ function setTab(id) {
   state.tab = id
   state.detailId = null
   if (id === 'queue') refreshJobs()
+  if (id === 'access') refreshInvites()
 }
+
+// ---------- accesos de invitados (solo admin) ----------
+
+async function refreshInvites() {
+  try {
+    state.invites = await api.listInvites()
+  } catch (error) {
+    flash(error instanceof ApiError ? error.message : 'No se pudieron cargar los accesos')
+  }
+}
+
+async function createInvite(label, days) {
+  try {
+    const created = await api.createInvite(label, days)
+    state.newInvite = created
+    await refreshInvites()
+    return true
+  } catch (error) {
+    flash(error instanceof ApiError ? error.message : 'No se pudo crear el acceso')
+    return false
+  }
+}
+
+async function revokeInvite(invite) {
+  try {
+    await api.revokeInvite(invite.id)
+    flash('Acceso revocado')
+  } catch (error) {
+    flash(error instanceof ApiError ? error.message : 'No se pudo revocar el acceso')
+  }
+  await refreshInvites()
+}
+
+const dismissNewInvite = () => { state.newInvite = null }
 
 const openDetail = (id) => { state.tab = 'queue'; state.detailId = id }
 const closeDetail = () => { state.detailId = null }
@@ -416,7 +464,7 @@ function consumeSharedUrl() {
 export function useClipo() {
   return {
     state,
-    detail, screen, activeJobs, doneJobs, badgeCount, anyRunning, glow,
+    detail, screen, isAdmin, activeJobs, doneJobs, badgeCount, anyRunning, glow,
     detectedName, placeholder,
     qualities, selectedQuality, formats, selectedCount, itemCount,
     fpsOptions, effectiveFps, estimatedBytes, sizeFor, specLabel, summary, optionsMeta,
@@ -424,6 +472,7 @@ export function useClipo() {
     toggleTheme, setTheme,
     setUrl, paste, selectPlatform, analyze,
     back, setMode, setQuality, setFormat, setFps, togglePlaylistItem, togglePlaylistAll, download,
+    refreshInvites, createInvite, revokeInvite, dismissNewInvite,
     setTab, openDetail, closeDetail, newDownload,
     togglePause, retry, cancel, pauseAll, removeFromLibrary, clearLibrary,
     flash,

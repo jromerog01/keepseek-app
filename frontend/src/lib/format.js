@@ -151,3 +151,8 @@ export function groupByDay(jobs, now = Date.now()) {
 export function storageUsed(jobs) {
   return jobs.filter((j) => j.status === 'done').reduce((sum, j) => sum + (j.size_bytes || 0), 0)
 }
+
+export function fmtDateTime(iso) {
+  if (!iso) return ''
+  return new Date(iso).toLocaleString('es', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+}

@@ -24,6 +24,7 @@ const ICONS = {
   retry: { sw: 16, cap: true, join: true, body: '<path d="M200 72a80 80 0 1 0 16 56"></path><path d="M200 32v40h-40"></path>' },
   warn: { sw: 16, cap: true, body: '<circle cx="128" cy="128" r="96"></circle><path d="M128 80v56"></path><path d="M128 172h.01"></path>' },
   info: { sw: 16, cap: true, body: '<circle cx="128" cy="128" r="96"></circle><path d="M128 116v60"></path><path d="M128 80h.01"></path>' },
+  key: { sw: 16, cap: true, join: true, body: '<circle cx="84" cy="172" r="44"></circle><path d="M116 140l92-92"></path><path d="M172 84l28 28"></path><path d="M148 108l24 24"></path>' },
   trash: { sw: 16, cap: true, join: true, body: '<path d="M52 68h152"></path><path d="M96 68V44h64v24"></path><path d="M76 68l12 148h80l12-148"></path><path d="M112 108v64M144 108v64"></path>' },
 }
 

@@ -411,3 +411,42 @@ def test_expired_invite_is_rejected(client):
         session.add(invite)
         session.commit()
     assert TestClient(client.app).post("/api/auth/login", json={"token": token}).status_code == 401
+
+
+def _guest_client(client):
+    token = client.post("/api/invites", json={"label": "Ana", "days": 3}).json()["token"]
+    guest = TestClient(client.app)
+    assert guest.post("/api/auth/login", json={"token": token}).status_code == 200
+    return guest
+
+
+def test_guest_cannot_see_admin_downloads(client):
+    from tests.conftest import wait_for
+
+    admin_job = client.post("/api/jobs", json={"url": "https://example.com/a", "title": "Admin"}).json()[0]["id"]
+    wait_for(client, admin_job, "done")
+    guest = _guest_client(client)
+
+    assert guest.get("/api/jobs").json() == []
+    for path in ("", "/wait", "/thumbnail", "/file"):
+        assert guest.get(f"/api/jobs/{admin_job}{path}").status_code == 404
+    assert guest.post(f"/api/jobs/{admin_job}/pause").status_code == 404
+    assert guest.delete(f"/api/jobs/{admin_job}").status_code == 404
+    assert guest.delete("/api/jobs?status=done").json() == {"removed": 0}
+    assert client.get(f"/api/jobs/{admin_job}").status_code == 200
+
+
+def test_guest_sees_only_own_downloads_and_admin_sees_all(client):
+    from tests.conftest import wait_for
+
+    guest = _guest_client(client)
+    own = guest.post("/api/jobs", json={"url": "https://example.com/g", "title": "Guest"}).json()[0]["id"]
+    wait_for(guest, own, "done")
+    admin_job = client.post("/api/jobs", json={"url": "https://example.com/a", "title": "Admin"}).json()[0]["id"]
+    wait_for(client, admin_job, "done")
+
+    assert [j["id"] for j in guest.get("/api/jobs").json()] == [own]
+    assert guest.get(f"/api/jobs/{own}/file").status_code == 200
+    assert {j["id"] for j in client.get("/api/jobs").json()} == {own, admin_job}
+    assert guest.delete("/api/jobs?status=done").json() == {"removed": 1}
+    assert client.get(f"/api/jobs/{admin_job}").status_code == 200

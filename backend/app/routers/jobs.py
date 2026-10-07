@@ -5,7 +5,8 @@ from fastapi.responses import FileResponse
 
 from app.auth import require_auth
 from app.models import Job, utcnow
-from app.routers.deps import checked_url, get_manager
+from app import auth
+from app.routers.deps import checked_url, get_manager, visible_job, visible_owner
 from app.schemas import JobCreate, JobOut, QuickRequest
 from app.services import formats
 from app.services.job_manager import JobManager
@@ -19,13 +20,6 @@ def _out(request: Request, job: Job) -> JobOut:
     return JobOut.from_job(job, state.settings.file_ttl_hours, manager.stages_for(job.id), manager.has_thumbnail(job.id))
 
 
-def _get_or_404(manager: JobManager, job_id: str) -> Job:
-    try:
-        return manager.get(job_id)
-    except KeyError:
-        raise HTTPException(status_code=404, detail="Descarga no encontrada")
-
-
 @router.post("/jobs", status_code=201)
 def create_jobs(body: JobCreate, request: Request, manager: JobManager = Depends(get_manager)):
     try:
@@ -35,6 +29,7 @@ def create_jobs(body: JobCreate, request: Request, manager: JobManager = Depends
 
     now = utcnow()
     common = dict(
+        owner=auth.current_owner(request),
         mode=body.mode,
         quality=body.quality,
         fps=body.fps,
@@ -86,37 +81,38 @@ def quick(body: QuickRequest, request: Request, manager: JobManager = Depends(ge
         fps=options["fps"],
         fmt=options["fmt"],
         source="shortcut",
+        owner=auth.current_owner(request),
     )
     return _out(request, job)
 
 
 @router.get("/jobs")
 def list_jobs(request: Request, manager: JobManager = Depends(get_manager)):
-    return [_out(request, job) for job in manager.all_jobs()]
+    return [_out(request, job) for job in manager.all_jobs(visible_owner(request))]
 
 
 @router.post("/jobs/pause-all")
-def pause_all(manager: JobManager = Depends(get_manager)):
-    manager.pause_all()
+def pause_all(request: Request, manager: JobManager = Depends(get_manager)):
+    manager.pause_all(visible_owner(request))
     return {"ok": True}
 
 
 @router.post("/jobs/resume-all")
-def resume_all(manager: JobManager = Depends(get_manager)):
-    manager.resume_all()
+def resume_all(request: Request, manager: JobManager = Depends(get_manager)):
+    manager.resume_all(visible_owner(request))
     return {"ok": True}
 
 
 @router.delete("/jobs")
-def clear_finished(status: str = Query("done"), manager: JobManager = Depends(get_manager)):
+def clear_finished(request: Request, status: str = Query("done"), manager: JobManager = Depends(get_manager)):
     if status != "done":
         raise HTTPException(status_code=422, detail="Solo se admite status=done")
-    return {"removed": manager.clear_finished()}
+    return {"removed": manager.clear_finished(visible_owner(request))}
 
 
 @router.get("/jobs/{job_id}")
-def get_job(job_id: str, request: Request, manager: JobManager = Depends(get_manager)):
-    return _out(request, _get_or_404(manager, job_id))
+def get_job(job_id: str, request: Request):
+    return _out(request, visible_job(request, job_id))
 
 
 @router.get("/jobs/{job_id}/wait")
@@ -126,7 +122,7 @@ def wait_job(
     timeout: float = Query(50, ge=1, le=90),
     manager: JobManager = Depends(get_manager),
 ):
-    _get_or_404(manager, job_id)
+    visible_job(request, job_id)
     try:
         job = manager.wait(job_id, timeout)
     except KeyError:
@@ -136,25 +132,25 @@ def wait_job(
 
 @router.post("/jobs/{job_id}/pause")
 def pause_job(job_id: str, request: Request, manager: JobManager = Depends(get_manager)):
-    _get_or_404(manager, job_id)
+    visible_job(request, job_id)
     return _out(request, manager.pause(job_id))
 
 
 @router.post("/jobs/{job_id}/resume")
 def resume_job(job_id: str, request: Request, manager: JobManager = Depends(get_manager)):
-    _get_or_404(manager, job_id)
+    visible_job(request, job_id)
     return _out(request, manager.resume(job_id))
 
 
 @router.delete("/jobs/{job_id}", status_code=204)
-def delete_job(job_id: str, manager: JobManager = Depends(get_manager)):
-    _get_or_404(manager, job_id)
+def delete_job(job_id: str, request: Request, manager: JobManager = Depends(get_manager)):
+    visible_job(request, job_id)
     manager.cancel(job_id)
 
 
 @router.get("/jobs/{job_id}/thumbnail")
-def job_thumbnail(job_id: str, manager: JobManager = Depends(get_manager)):
-    _get_or_404(manager, job_id)
+def job_thumbnail(job_id: str, request: Request, manager: JobManager = Depends(get_manager)):
+    visible_job(request, job_id)
     path = manager.thumbnail_path(job_id)
     if path is None:
         raise HTTPException(status_code=404, detail="Este video no tiene miniatura")
@@ -162,8 +158,8 @@ def job_thumbnail(job_id: str, manager: JobManager = Depends(get_manager)):
 
 
 @router.get("/jobs/{job_id}/file")
-def download_file(job_id: str, manager: JobManager = Depends(get_manager)):
-    job = _get_or_404(manager, job_id)
+def download_file(job_id: str, request: Request, manager: JobManager = Depends(get_manager)):
+    job = visible_job(request, job_id)
     if job.status == "expired":
         raise HTTPException(status_code=410, detail="El archivo ya expiró")
     path = manager.file_path(job)

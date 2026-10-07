@@ -13,6 +13,7 @@ from app.models import Invite, utcnow
 COOKIE_NAME = "clipo_session"
 COOKIE_MAX_AGE = 60 * 60 * 24 * 365
 _SALT = "clipo-session"
+OWNER_ADMIN = "admin"
 
 
 def _serializer(secret_key: str) -> URLSafeTimedSerializer:
@@ -96,6 +97,15 @@ def authorize(request: Request) -> str | None:
     with Session(state.engine) as session:
         invite = session.get(Invite, invite_id)
     return "guest" if invite_is_active(invite) else None
+
+
+def current_owner(request: Request) -> str:
+    """'admin' para el token original; el id de la invitación para una sesión de invitado."""
+    state = request.app.state
+    if token_matches(request.headers.get("x-api-key"), state.settings.api_token):
+        return OWNER_ADMIN
+    data = read_session_cookie(request.cookies.get(COOKIE_NAME), state.settings.secret_key)
+    return (data or {}).get("inv") or OWNER_ADMIN
 
 
 def require_auth(request: Request) -> None:

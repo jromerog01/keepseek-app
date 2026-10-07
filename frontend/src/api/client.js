@@ -51,5 +51,8 @@ export const api = {
   pauseAll: () => request('/jobs/pause-all', { method: 'POST' }),
   resumeAll: () => request('/jobs/resume-all', { method: 'POST' }),
   clearFinished: () => request('/jobs?status=done', { method: 'DELETE' }),
+  listInvites: () => request('/invites'),
+  createInvite: (label, days) => request('/invites', { method: 'POST', body: { label, days } }),
+  revokeInvite: (id) => request(`/invites/${id}`, { method: 'DELETE' }),
   fileUrl: (id) => `/api/jobs/${id}/file`,
 }

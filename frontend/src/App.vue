@@ -5,6 +5,7 @@ import HomeView from './views/HomeView.vue'
 import OptionsView from './views/OptionsView.vue'
 import ProgressView from './views/ProgressView.vue'
 import LibraryView from './views/LibraryView.vue'
+import InvitesView from './views/InvitesView.vue'
 import LoginView from './views/LoginView.vue'
 import TabBar from './components/TabBar.vue'
 import Toast from './components/Toast.vue'
@@ -29,6 +30,7 @@ onMounted(boot)
             <HomeView v-if="screen === 'home'" />
             <OptionsView v-else-if="screen === 'options'" />
             <ProgressView v-else-if="screen === 'progress'" />
+            <InvitesView v-else-if="screen === 'access'" />
             <LibraryView v-else />
           </div>
         </main>
