@@ -8,7 +8,7 @@ log() { echo "[clipo-rebuild $(date -Is)] $*"; }
 
 mkdir -p data
 
-port=$(grep -E '^CLIPO_PORT=' .env 2>/dev/null | tail -1 | cut -d= -f2 | tr -d '[:space:]')
+port=$(grep -E '^CLIPO_PORT=' .env 2>/dev/null | tail -1 | cut -d= -f2 | tr -d '[:space:]') || true
 port="${port:-8010}"
 
 # Espera (máx. 30 min) a que no haya descargas activas para no interrumpirlas.

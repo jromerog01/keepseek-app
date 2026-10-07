@@ -68,6 +68,12 @@ Receta paso a paso en [`docs/atajo-ios.md`](docs/atajo-ios.md).
 
 Instala un timer de systemd que ejecuta `scripts/rebuild.sh` todos los días a las 04:30: espera a que no haya descargas activas, reconstruye la imagen con el yt-dlp nightly del momento, reinicia el contenedor y limpia imágenes viejas. Las descargas que el reinicio interrumpa quedan en **pausa** y se reanudan desde la Biblioteca.
 
+Sin sudo, la alternativa es una entrada en el crontab del usuario (`crontab -e`):
+
+```
+30 4 * * * PATH=/usr/local/bin:/usr/bin:/bin /ruta/a/clipo/scripts/rebuild.sh >> /ruta/a/clipo/data/rebuild.log 2>&1
+```
+
 Probarlo a mano: `./scripts/rebuild.sh`. Ver el timer: `systemctl list-timers clipo-rebuild.timer`. Ver el log: `journalctl -u clipo-rebuild`.
 
 ## API
