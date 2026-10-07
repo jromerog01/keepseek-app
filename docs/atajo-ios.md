@@ -27,10 +27,11 @@ Crea un atajo nuevo con estas acciones, en este orden. Donde diga **(encabezado)
 
 1. **Recibir** *URLs* y *Texto* de **la hoja para compartir**. Si no hay entrada: *Continuar* (o *Pedir*).
 2. **Obtener URLs de** *Entrada del atajo*.
+   - (Opcional) **Obtener detalles del dispositivo** → *Nombre del dispositivo*, para que la Biblioteca muestre qué dispositivo hizo la descarga.
 3. **Obtener contenido de URL**
    - URL: `https://clipo.jromerog.dev/api/quick`
    - Método: **POST**
-   - Encabezados: `X-API-Key` = tu token **(encabezado)**
+   - Encabezados: `X-API-Key` = tu token **(encabezado)** y, si hiciste el paso opcional, `X-Device-Name` = *Nombre del dispositivo*
    - Cuerpo de la solicitud: **JSON**, con un campo **Texto** llamado `url` cuyo valor es la variable *URLs*.
 4. **Obtener valor del diccionario**: clave `id` de *Contenido de URL*. Guárdalo con **Asignar variable** → `JobID`.
 5. **Repetir 10 veces**

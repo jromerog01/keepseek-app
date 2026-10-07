@@ -38,6 +38,7 @@ class Job(SQLModel, table=True):
     source: str = "pwa"
     # "admin" (token original) o el id de la invitación que la creó
     owner: str = Field(default="admin", index=True)
+    device: str | None = None
 
     created_at: datetime = Field(default_factory=utcnow)
     finished_at: datetime | None = None

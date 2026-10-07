@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import {
-  expiresIn, fmtBytes, fmtSpeed, groupByDay, relativeTime, sizeLabel, stageSummary, statusLabel, storageUsed,
+  expiresIn, fmtBytes, fmtSpeed, groupByDay, groupByOwner, relativeTime, sizeLabel, stageSummary, statusLabel, storageUsed,
 } from '../lib/format.js'
 import { useClipo } from '../store/useClipo.js'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
@@ -9,7 +9,7 @@ import Icon from '../components/Icon.vue'
 import JobThumb from '../components/JobThumb.vue'
 
 const {
-  activeJobs, doneJobs, anyRunning, openDetail, togglePause, retry, cancel, pauseAll,
+  isAdmin, activeJobs, doneJobs, anyRunning, openDetail, togglePause, retry, cancel, pauseAll,
   removeFromLibrary, clearLibrary, newDownload,
 } = useClipo()
 
@@ -40,7 +40,11 @@ let ticker = null
 onMounted(() => { ticker = window.setInterval(() => { now.value = Date.now() }, 30000) })
 onUnmounted(() => window.clearInterval(ticker))
 
-const groups = computed(() => groupByDay(shownDone.value, now.value))
+// Admin: una sección por token, y dentro de cada una los días. Invitado: solo los días.
+const sections = computed(() => {
+  if (!isAdmin.value) return [{ owner: null, label: null, days: groupByDay(shownDone.value, now.value) }]
+  return groupByOwner(shownDone.value).map((g) => ({ ...g, days: groupByDay(g.jobs, now.value) }))
+})
 const summary = computed(() => {
   const ready = doneJobs.value.filter((j) => j.status === 'done').length
   const parts = [`${doneJobs.value.length} ${doneJobs.value.length === 1 ? 'video' : 'videos'}`]
@@ -52,10 +56,12 @@ const summary = computed(() => {
 const pct = (job) => Math.round(job.progress) + '%'
 const activeMeta = (job) => {
   if (job.status === 'error') return job.error || 'La descarga falló'
-  return (job.status === 'running' && stageSummary(job)) || job.spec
+  const text = (job.status === 'running' && stageSummary(job)) || job.spec
+  return [isAdmin.value && job.owner !== 'admin' ? job.owner_label : null, text].filter(Boolean).join(' · ')
 }
+const deviceText = (job) => job.device || (job.source === 'shortcut' ? 'Atajo' : null)
 const rightText = (job) => (job.status === 'running' && job.speed ? `↓ ${fmtSpeed(job.speed)}` : statusLabel(job))
-const doneMeta = (job) => [job.spec, sizeLabel(job), job.source === 'shortcut' ? 'Atajo' : null].filter(Boolean).join(' · ')
+const doneMeta = (job) => [job.spec, sizeLabel(job)].filter(Boolean).join(' · ')
 const when = (job) => relativeTime(job.finished_at || job.created_at, now.value)
 const expiry = (job) => (job.status === 'done' ? expiresIn(job.expires_at, now.value) : null)
 
@@ -199,6 +205,7 @@ async function confirmClear() {
                   :style="{ color: job.status === 'error' ? '#ffb4aa' : 'var(--color-neutral-500)' }"
                   style="font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
                 >{{ activeMeta(job) }}</span>
+                <span v-if="deviceText(job)" style="font-size:11px;color:var(--color-neutral-600);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ deviceText(job) }}</span>
               </span>
             </button>
             <div class="active-controls">
@@ -235,60 +242,71 @@ async function confirmClear() {
         </div>
       </section>
 
-      <!-- Descargados, agrupados por día -->
+      <!-- Descargados, agrupados por día (y por token para el admin) -->
       <section v-if="shownDone.length" style="display:flex;flex-direction:column;gap:14px">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <h6 style="margin:0;color:var(--color-neutral-500)">Descargados · {{ shownDone.length }}</h6>
           <button class="btn btn-ghost" style="font-size:12px;color:var(--color-neutral-500)" @click="confirmingClear = true">Limpiar biblioteca</button>
         </div>
 
-        <div v-for="group in groups" :key="group.label" style="display:flex;flex-direction:column;gap:6px">
-          <div style="font-size:12px;font-weight:500;color:var(--color-neutral-400)">{{ group.label }}</div>
+        <div v-for="section in sections" :key="section.owner ?? 'own'" style="display:flex;flex-direction:column;gap:14px">
+          <div
+            v-if="section.label"
+            style="display:flex;align-items:center;gap:8px;padding-bottom:6px;border-bottom:1px solid var(--color-neutral-800)"
+          >
+            <span style="display:flex;color:var(--color-accent)"><Icon name="key" :size="16" /></span>
+            <span style="flex:1;font-size:14px;font-weight:500">{{ section.label }}</span>
+            <span style="font-size:12px;color:var(--color-neutral-500);font-variant-numeric:tabular-nums">{{ section.jobs.length }}</span>
+          </div>
+          <div v-for="group in section.days" :key="group.label" style="display:flex;flex-direction:column;gap:6px">
+            <div style="font-size:12px;font-weight:500;color:var(--color-neutral-400)">{{ group.label }}</div>
 
-          <div v-for="job in group.jobs" :key="job.id" class="library-swipe">
-            <div class="library-swipe-actions">
-              <button class="btn library-action" type="button" aria-label="Ver detalles" @click.stop="openDetail(job.id)">
-                <Icon name="info" :size="16" />
-                <span>Ver</span>
-              </button>
-              <button class="btn library-action library-action-danger" type="button" aria-label="Borrar de la biblioteca" @click.stop="deleteDone(job)">
-                <Icon name="trash" :size="16" />
-                <span>Borrar</span>
+            <div v-for="job in group.jobs" :key="job.id" class="library-swipe">
+              <div class="library-swipe-actions">
+                <button class="btn library-action" type="button" aria-label="Ver detalles" @click.stop="openDetail(job.id)">
+                  <Icon name="info" :size="16" />
+                  <span>Ver</span>
+                </button>
+                <button class="btn library-action library-action-danger" type="button" aria-label="Borrar de la biblioteca" @click.stop="deleteDone(job)">
+                  <Icon name="trash" :size="16" />
+                  <span>Borrar</span>
+                </button>
+              </div>
+              <button
+                type="button"
+                class="reset library-swipe-front"
+                :class="{ 'is-open': openSwipeId === job.id }"
+                :style="{ transform: `translateX(${rowOffset(job)}px)` }"
+                @pointerdown="onSwipeStart($event, job)"
+                @pointermove="onSwipeMove($event, job)"
+                @pointerup="onSwipeEnd($event, job)"
+                @pointercancel="onSwipeEnd($event, job)"
+                @click="openDone(job)"
+              >
+                <JobThumb :job="job" :width="96" :height="54" />
+                <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px">
+                  <span
+                    class="clamp-2"
+                    :style="{ color: job.status === 'expired' ? 'var(--color-neutral-500)' : 'var(--color-text)' }"
+                    style="font-size:14px;line-height:1.25"
+                  >{{ job.title }}</span>
+                  <span style="font-size:12px;color:var(--color-neutral-500);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ doneMeta(job) }}</span>
+                  <span style="display:flex;gap:8px;align-items:center;font-size:11px;color:var(--color-neutral-600)">
+                    <span>{{ when(job) }}</span>
+                    <span v-if="deviceText(job)" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">· {{ deviceText(job) }}</span>
+                    <span
+                      v-if="job.status === 'expired'"
+                      style="padding:1px 7px;border-radius:8px;background:var(--color-neutral-800);color:var(--color-neutral-400)"
+                    >Expirado</span>
+                    <span
+                      v-else-if="expiry(job)"
+                      :style="{ color: expiry(job).urgent ? '#ffb4aa' : 'var(--color-neutral-500)' }"
+                      style="display:flex;align-items:center;gap:4px"
+                    >· {{ expiry(job).label }}</span>
+                  </span>
+                </span>
               </button>
             </div>
-            <button
-              type="button"
-              class="reset library-swipe-front"
-              :class="{ 'is-open': openSwipeId === job.id }"
-              :style="{ transform: `translateX(${rowOffset(job)}px)` }"
-              @pointerdown="onSwipeStart($event, job)"
-              @pointermove="onSwipeMove($event, job)"
-              @pointerup="onSwipeEnd($event, job)"
-              @pointercancel="onSwipeEnd($event, job)"
-              @click="openDone(job)"
-            >
-              <JobThumb :job="job" :width="96" :height="54" />
-              <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px">
-                <span
-                  class="clamp-2"
-                  :style="{ color: job.status === 'expired' ? 'var(--color-neutral-500)' : 'var(--color-text)' }"
-                  style="font-size:14px;line-height:1.25"
-                >{{ job.title }}</span>
-                <span style="font-size:12px;color:var(--color-neutral-500);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ doneMeta(job) }}</span>
-                <span style="display:flex;gap:8px;align-items:center;font-size:11px;color:var(--color-neutral-600)">
-                  <span>{{ when(job) }}</span>
-                  <span
-                    v-if="job.status === 'expired'"
-                    style="padding:1px 7px;border-radius:8px;background:var(--color-neutral-800);color:var(--color-neutral-400)"
-                  >Expirado</span>
-                  <span
-                    v-else-if="expiry(job)"
-                    :style="{ color: expiry(job).urgent ? '#ffb4aa' : 'var(--color-neutral-500)' }"
-                    style="display:flex;align-items:center;gap:4px"
-                  >· {{ expiry(job).label }}</span>
-                </span>
-              </span>
-            </button>
           </div>
         </div>
       </section>

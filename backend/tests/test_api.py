@@ -450,3 +450,23 @@ def test_guest_sees_only_own_downloads_and_admin_sees_all(client):
     assert {j["id"] for j in client.get("/api/jobs").json()} == {own, admin_job}
     assert guest.delete("/api/jobs?status=done").json() == {"removed": 1}
     assert client.get(f"/api/jobs/{admin_job}").status_code == 200
+
+
+def test_jobs_record_device_and_owner_label(client):
+    from app.services.devices import device_label
+
+    iphone = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1"
+    assert device_label(None, iphone) == "iPhone · Safari"
+    assert device_label(None, "Shortcuts/1300 CFNetwork Darwin/24.0.0") == "Atajo de iOS"
+    assert device_label("  iPhone de Ana\n", iphone) == "iPhone de Ana"
+    assert device_label(None, "curl/8.0") is None
+
+    admin = client.post("/api/jobs", json={"url": "https://example.com/a"}, headers={"User-Agent": iphone}).json()[0]
+    assert admin["device"] == "iPhone · Safari" and admin["owner_label"] == "Token original"
+
+    guest = _guest_client(client)
+    own = guest.post("/api/quick", json={"url": "https://example.com/g"}, headers={"X-Device-Name": "iPhone de Ana"}).json()
+    assert own["device"] == "iPhone de Ana" and own["owner_label"] == "Ana"
+
+    labels = {j["id"]: j["owner_label"] for j in client.get("/api/jobs").json()}
+    assert labels == {admin["id"]: "Token original", own["id"]: "Ana"}

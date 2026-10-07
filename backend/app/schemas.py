@@ -78,6 +78,9 @@ class JobOut(BaseModel):
     speed: float | None
     eta: int | None
     source: str
+    device: str | None = None
+    owner: str = "admin"
+    owner_label: str | None = None
     created_at: str
     finished_at: str | None
     expires_at: str | None
@@ -86,7 +89,14 @@ class JobOut(BaseModel):
     has_thumbnail: bool = False
 
     @classmethod
-    def from_job(cls, job: Job, ttl_hours: int, stages: list[dict] | None = None, has_thumbnail: bool = False) -> "JobOut":
+    def from_job(
+        cls,
+        job: Job,
+        ttl_hours: int,
+        stages: list[dict] | None = None,
+        has_thumbnail: bool = False,
+        owner_label: str | None = None,
+    ) -> "JobOut":
         eta = None
         if job.status == "running" and job.speed and job.total_bytes:
             remaining = max(job.total_bytes - job.downloaded_bytes, 0)
@@ -120,6 +130,9 @@ class JobOut(BaseModel):
             speed=job.speed,
             eta=eta,
             source=job.source,
+            device=job.device,
+            owner=job.owner,
+            owner_label=owner_label,
             created_at=_iso(job.created_at),
             finished_at=_iso(job.finished_at),
             expires_at=expires_at,

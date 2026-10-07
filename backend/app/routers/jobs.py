@@ -4,20 +4,48 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import FileResponse
 
 from app.auth import require_auth
-from app.models import Job, utcnow
+from sqlmodel import Session, select
+
+from app.models import Invite, Job, utcnow
 from app import auth
 from app.routers.deps import checked_url, get_manager, visible_job, visible_owner
 from app.schemas import JobCreate, JobOut, QuickRequest
 from app.services import formats
+from app.services.devices import device_label
 from app.services.job_manager import JobManager
 
 router = APIRouter(prefix="/api", tags=["jobs"], dependencies=[Depends(require_auth)])
 
 
-def _out(request: Request, job: Job) -> JobOut:
+ADMIN_LABEL = "Token original"
+
+
+def _owner_labels(request: Request, jobs: list[Job]) -> dict[str, str]:
+    """Nombre de cada invitación dueña de alguna descarga (también las revocadas)."""
+    ids = {job.owner for job in jobs} - {auth.OWNER_ADMIN}
+    labels = {auth.OWNER_ADMIN: ADMIN_LABEL}
+    if ids:
+        with Session(request.app.state.engine) as session:
+            invites = session.exec(select(Invite).where(Invite.id.in_(ids))).all()
+        labels.update({invite.id: invite.label for invite in invites})
+    return labels
+
+
+def _out(request: Request, job: Job, labels: dict[str, str] | None = None) -> JobOut:
     state = request.app.state
     manager = state.manager
-    return JobOut.from_job(job, state.settings.file_ttl_hours, manager.stages_for(job.id), manager.has_thumbnail(job.id))
+    labels = labels if labels is not None else _owner_labels(request, [job])
+    return JobOut.from_job(
+        job,
+        state.settings.file_ttl_hours,
+        manager.stages_for(job.id),
+        manager.has_thumbnail(job.id),
+        labels.get(job.owner, "Invitación eliminada"),
+    )
+
+
+def _device(request: Request) -> str | None:
+    return device_label(request.headers.get("x-device-name"), request.headers.get("user-agent"))
 
 
 @router.post("/jobs", status_code=201)
@@ -30,6 +58,7 @@ def create_jobs(body: JobCreate, request: Request, manager: JobManager = Depends
     now = utcnow()
     common = dict(
         owner=auth.current_owner(request),
+        device=_device(request),
         mode=body.mode,
         quality=body.quality,
         fps=body.fps,
@@ -59,7 +88,8 @@ def create_jobs(body: JobCreate, request: Request, manager: JobManager = Depends
                 **common,
             )
         ]
-    return [_out(request, job) for job in jobs]
+    labels = _owner_labels(request, jobs)
+    return [_out(request, job, labels) for job in jobs]
 
 
 @router.post("/quick", status_code=201)
@@ -82,13 +112,16 @@ def quick(body: QuickRequest, request: Request, manager: JobManager = Depends(ge
         fmt=options["fmt"],
         source="shortcut",
         owner=auth.current_owner(request),
+        device=_device(request),
     )
     return _out(request, job)
 
 
 @router.get("/jobs")
 def list_jobs(request: Request, manager: JobManager = Depends(get_manager)):
-    return [_out(request, job) for job in manager.all_jobs(visible_owner(request))]
+    jobs = manager.all_jobs(visible_owner(request))
+    labels = _owner_labels(request, jobs)
+    return [_out(request, job, labels) for job in jobs]
 
 
 @router.post("/jobs/pause-all")

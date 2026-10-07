@@ -148,6 +148,18 @@ export function groupByDay(jobs, now = Date.now()) {
   return groups
 }
 
+// Una sección por token: primero el original, luego las invitaciones por nombre
+export function groupByOwner(jobs) {
+  const groups = new Map()
+  for (const job of jobs) {
+    const owner = job.owner || 'admin'
+    if (!groups.has(owner)) groups.set(owner, { owner, label: job.owner_label || 'Token original', jobs: [] })
+    groups.get(owner).jobs.push(job)
+  }
+  return [...groups.values()].sort((a, b) =>
+    (a.owner === 'admin' ? -1 : b.owner === 'admin' ? 1 : a.label.localeCompare(b.label, 'es')))
+}
+
 export function storageUsed(jobs) {
   return jobs.filter((j) => j.status === 'done').reduce((sum, j) => sum + (j.size_bytes || 0), 0)
 }

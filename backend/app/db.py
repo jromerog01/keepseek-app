@@ -19,9 +19,11 @@ def make_engine(db_path: Path) -> Engine:
 
 
 def _add_missing_columns(engine: Engine) -> None:
-    """Bases creadas antes de que existiera `job.owner`: sus descargas son del admin."""
+    """Columnas agregadas después de crear la base; las descargas viejas quedan como del admin."""
     columns = {c["name"] for c in inspect(engine).get_columns("job")}
-    if "owner" not in columns:
-        with engine.begin() as conn:
+    with engine.begin() as conn:
+        if "owner" not in columns:
             conn.execute(text("ALTER TABLE job ADD COLUMN owner VARCHAR NOT NULL DEFAULT 'admin'"))
             conn.execute(text("CREATE INDEX IF NOT EXISTS ix_job_owner ON job (owner)"))
+        if "device" not in columns:
+            conn.execute(text("ALTER TABLE job ADD COLUMN device VARCHAR"))

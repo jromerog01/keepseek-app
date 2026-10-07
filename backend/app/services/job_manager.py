@@ -298,6 +298,7 @@ class JobManager:
         size_estimate: int | None = None,
         source: str = "pwa",
         owner: str = "admin",
+        device: str | None = None,
         created_at: datetime | None = None,
     ) -> Job:
         formats.validate_options(mode, quality, fps, fmt)
@@ -321,6 +322,7 @@ class JobManager:
             total_bytes=size_estimate,
             source=source,
             owner=owner,
+            device=device,
             created_at=created_at or utcnow(),
         )
         with self._lock:

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { detect, isPlaylistUrl } from './platforms.js'
 import { estimateBytes, estimateTotal, DEFAULT_SECONDS } from './size.js'
-import { dayGroup, etaLabel, fmtSpeed, phaseLabel, speedLabel, expiresIn, fileName, groupByDay, relativeTime, storageUsed, fmtBytes, fmtDuration, sizeLabel, stageRows, stagesFor, stageSummary, statusLabel } from './format.js'
+import { dayGroup, etaLabel, fmtSpeed, phaseLabel, speedLabel, expiresIn, fileName, groupByDay, relativeTime, storageUsed, fmtBytes, fmtDuration, groupByOwner, sizeLabel, stageRows, stagesFor, stageSummary, statusLabel } from './format.js'
 import { computeDeficit } from './viewport.js'
 import { glowFor, pick } from './styles.js'
 import { readBody } from './download.js'
@@ -271,5 +271,19 @@ describe('tamaño aproximado', () => {
     const total = estimateTotal({ ...base, durations: [100, 50, null] })
     expect(total).toBe(50_000_000 + 25_000_000 + Math.round(500_000 * DEFAULT_SECONDS))
     expect(estimateTotal({ ...base, durations: [] })).toBe(0)
+  })
+})
+
+describe('groupByOwner', () => {
+  it('pone primero el token original y luego las invitaciones por nombre', () => {
+    const jobs = [
+      { id: 1, owner: 'b1', owner_label: 'Beto' },
+      { id: 2, owner: 'admin', owner_label: 'Token original' },
+      { id: 3, owner: 'a1', owner_label: 'Ana' },
+      { id: 4, owner: 'b1', owner_label: 'Beto' },
+    ]
+    const groups = groupByOwner(jobs)
+    expect(groups.map((g) => g.label)).toEqual(['Token original', 'Ana', 'Beto'])
+    expect(groups[2].jobs.map((j) => j.id)).toEqual([1, 4])
   })
 })
