@@ -460,7 +460,13 @@ def test_jobs_record_device_and_owner_label(client):
     assert device_label(None, "Shortcuts/1300 CFNetwork Darwin/24.0.0") == "Atajo de iOS"
     assert device_label("  iPhone de Ana\n", iphone) == "iPhone de Ana"
     assert device_label(None, "curl/8.0") is None
+    android = "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36"
+    assert device_label(None, android) == "Android · Chrome"
+    assert device_label(None, android, "SM-S918B") == "Android SM-S918B · Chrome"
+    assert device_label(None, iphone, "SM-S918B") == "iPhone · Safari"
 
+    pixel = client.post("/api/jobs", json={"url": "https://example.com/p"}, headers={"User-Agent": android, "X-Device-Model": "Pixel 8"}).json()[0]
+    assert pixel["device"] == "Android Pixel 8 · Chrome"
     admin = client.post("/api/jobs", json={"url": "https://example.com/a"}, headers={"User-Agent": iphone}).json()[0]
     assert admin["device"] == "iPhone · Safari" and admin["owner_label"] == "Token original"
 
@@ -469,4 +475,4 @@ def test_jobs_record_device_and_owner_label(client):
     assert own["device"] == "iPhone de Ana" and own["owner_label"] == "Ana"
 
     labels = {j["id"]: j["owner_label"] for j in client.get("/api/jobs").json()}
-    assert labels == {admin["id"]: "Token original", own["id"]: "Ana"}
+    assert labels == {pixel["id"]: "Token original", admin["id"]: "Token original", own["id"]: "Ana"}

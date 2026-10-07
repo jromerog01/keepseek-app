@@ -26,14 +26,19 @@ def _clean(name: str) -> str:
     return re.sub(r"[\x00-\x1f\x7f]+", " ", name).strip()[:MAX_LEN]
 
 
-def device_label(header_name: str | None, user_agent: str | None) -> str | None:
-    """Nombre que envía el cliente (el Atajo puede mandar el real) o uno deducido del navegador."""
+def device_label(header_name: str | None, user_agent: str | None, model: str | None = None) -> str | None:
+    """Nombre que envía el cliente (el Atajo puede mandar el real) o uno deducido del navegador.
+
+    `model` es el que la PWA lee en Android con userAgentData, p. ej. "Pixel 8" o "SM-S918B".
+    """
     if header_name and (name := _clean(header_name)):
         return name
     ua = user_agent or ""
     if ua.startswith(("Shortcuts", "BackgroundShortcutRunner", "WorkflowKit")):
         return "Atajo de iOS"
     device = next((label for key, label in _DEVICES if key in ua), None)
+    if device == "Android" and model and (model := _clean(model)):
+        device = f"Android {model}"
     if device is None:
         return None
     browser = next((label for key, label in _BROWSERS if key in ua), None)

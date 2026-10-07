@@ -8,13 +8,31 @@ export class ApiError extends Error {
 let unauthorizedHandler = () => {}
 export const onUnauthorized = (handler) => { unauthorizedHandler = handler }
 
+// Modelo del teléfono en Android (Chrome, Edge, Samsung Internet…): el User-Agent ya no lo trae
+const deviceModel = (async () => {
+  try {
+    const data = navigator.userAgentData
+    if (!data || data.platform !== 'Android') return null
+    const { model } = await data.getHighEntropyValues(['model'])
+    return model?.trim() || null
+  } catch {
+    return null
+  }
+})()
+
 async function request(path, { method = 'GET', body, signal } = {}) {
+  const headers = {}
+  if (body !== undefined) headers['Content-Type'] = 'application/json'
+  if (method === 'POST') {
+    const model = await deviceModel
+    if (model) headers['X-Device-Model'] = model
+  }
   let response
   try {
     response = await fetch('/api' + path, {
       method,
       credentials: 'same-origin',
-      headers: body !== undefined ? { 'Content-Type': 'application/json' } : undefined,
+      headers,
       body: body !== undefined ? JSON.stringify(body) : undefined,
       signal,
     })

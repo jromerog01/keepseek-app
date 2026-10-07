@@ -45,7 +45,11 @@ def _out(request: Request, job: Job, labels: dict[str, str] | None = None) -> Jo
 
 
 def _device(request: Request) -> str | None:
-    return device_label(request.headers.get("x-device-name"), request.headers.get("user-agent"))
+    return device_label(
+        request.headers.get("x-device-name"),
+        request.headers.get("user-agent"),
+        request.headers.get("x-device-model"),
+    )
 
 
 @router.post("/jobs", status_code=201)
