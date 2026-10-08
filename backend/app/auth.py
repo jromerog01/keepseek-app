@@ -101,11 +101,24 @@ def touch_invite(engine, invite_id: str) -> None:
             session.commit()
 
 
+def _header_invite(request: Request) -> Invite | None:
+    """Invitación activa enviada en X-API-Key (el Atajo de un invitado). Se resuelve una vez por petición."""
+    if not hasattr(request.state, "header_invite"):
+        token = request.headers.get("x-api-key")
+        invite = find_invite_by_token(request.app.state.engine, token) if token else None
+        if invite:
+            touch_invite(request.app.state.engine, invite.id)
+        request.state.header_invite = invite
+    return request.state.header_invite
+
+
 def authorize(request: Request) -> str | None:
     """Devuelve 'admin' o 'guest' si la petición está autorizada, si no None."""
     state = request.app.state
     if token_matches(request.headers.get("x-api-key"), state.settings.api_token):
         return "admin"
+    if request.headers.get("x-api-key"):
+        return "guest" if _header_invite(request) else None
     data = read_session_cookie(request.cookies.get(COOKIE_NAME), state.settings.secret_key)
     if data is None:
         return None
@@ -122,6 +135,11 @@ def current_owner(request: Request) -> str:
     state = request.app.state
     if token_matches(request.headers.get("x-api-key"), state.settings.api_token):
         return OWNER_ADMIN
+    if request.headers.get("x-api-key"):
+        invite = _header_invite(request)
+        if invite is None:
+            raise HTTPException(status_code=401, detail="No autorizado")
+        return invite.id
     data = read_session_cookie(request.cookies.get(COOKIE_NAME), state.settings.secret_key)
     return (data or {}).get("inv") or OWNER_ADMIN
 

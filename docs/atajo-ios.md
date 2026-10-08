@@ -95,7 +95,7 @@ curl -s -H "X-API-Key: $TOKEN" -o video.mp4 "$URL/api/jobs/$ID/file"
 
 | Síntoma | Causa probable |
 |---|---|
-| El atajo dice "No autorizado" | El header `X-API-Key` falta o el token no coincide con `API_TOKEN`. |
+| El atajo dice "No autorizado" | El header `X-API-Key` falta, o el token no es `API_TOKEN` ni una invitación activa (puede haber expirado o estar revocada). |
 | `status` se queda en `running` tras 10 vueltas | Video muy pesado o largo. Revisa el avance en la Biblioteca de la PWA. |
 | `status` = `error` con "Sign in to confirm you're not a bot" | YouTube pide sesión. Pon un `cookies.txt` en `data/` (ver README). |
 | Fotos no guarda el video | Se descargó en un formato que no es H.264. Con `/api/quick` no debería pasar; si usas la PWA, elige MP4 a 1080p o menos. |

@@ -507,3 +507,24 @@ def test_invite_token_can_be_shown_again_and_inactive_ones_deleted(client):
     assert client.get("/api/invites").json() == []
     assert guest.get("/api/jobs").status_code == 401
     assert client.get(f"/api/jobs/{job}").json()["owner_label"] == "Caro"
+
+
+def test_invite_token_works_in_api_key_header_as_guest(client):
+    from tests.conftest import wait_for
+
+    created = client.post("/api/invites", json={"label": "Eli"}).json()
+    admin_job = client.post("/api/jobs", json={"url": "https://example.com/a"}).json()[0]["id"]
+
+    shortcut = TestClient(client.app)
+    shortcut.headers.update({"X-API-Key": created["token"]})
+    job = shortcut.post("/api/quick", json={"url": "https://example.com/s"}).json()
+    assert job["owner"] == created["id"] and job["owner_label"] == "Eli"
+    wait_for(shortcut, job["id"], "done")
+    assert shortcut.get(f"/api/jobs/{job['id']}/file").status_code == 200
+    assert shortcut.get(f"/api/jobs/{admin_job}").status_code == 404
+    assert shortcut.get("/api/invites").status_code == 403
+
+    client.delete(f"/api/invites/{created['id']}")
+    assert shortcut.get("/api/jobs").status_code == 401
+    bad = TestClient(client.app)
+    assert bad.get("/api/jobs", headers={"X-API-Key": "clipo-falso"}).status_code == 401
