@@ -119,3 +119,18 @@ def test_spec_labels():
     assert formats.spec_label("video", "1080", None, "MP4") == "1080p · MP4"
     assert formats.spec_label("video", "1080", 60, "MP4") == "1080p 60 fps · MP4"
     assert formats.spec_label("audio", "320", None, "MP3") == "320 kbps · MP3"
+
+
+def test_cookies_txt_no_se_reescribe(tmp_path):
+    from http.cookiejar import Cookie
+
+    from app.services.ytdlp_options import ReadOnlyCookiesYDL
+
+    cookies = tmp_path / "cookies.txt"
+    cookies.write_text("# Netscape HTTP Cookie File\n")
+    before = cookies.read_text()
+    with ReadOnlyCookiesYDL({"quiet": True, "cookiefile": str(cookies)}) as ydl:
+        ydl.cookiejar.set_cookie(
+            Cookie(0, "YSC", "x", None, False, ".youtube.com", True, True, "/", True, True, None, False, None, None, {})
+        )
+    assert cookies.read_text() == before

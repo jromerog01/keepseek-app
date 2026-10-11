@@ -1,12 +1,25 @@
 from importlib.util import find_spec
 from urllib.parse import urlparse
 
+from yt_dlp import YoutubeDL
 from yt_dlp.utils import std_headers
 
 try:
     from yt_dlp.networking.impersonate import ImpersonateTarget
 except ImportError:  # pragma: no cover - compatibilidad con yt-dlp viejo
     ImpersonateTarget = None
+
+
+class ReadOnlyCookiesYDL(YoutubeDL):
+    """YoutubeDL que lee cookies.txt pero nunca lo reescribe.
+
+    yt-dlp guarda el cookiejar al cerrar, así que cada visita a YouTube,
+    Facebook o TikTok le agregaba cookies de visitante al archivo del usuario;
+    esas cookies terminaban provocando 403 en las descargas siguientes.
+    """
+
+    def save_cookies(self):
+        pass
 
 
 def _origin(url: str) -> str | None:

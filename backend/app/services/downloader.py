@@ -2,13 +2,12 @@ import logging
 import subprocess
 from pathlib import Path
 
-from yt_dlp import YoutubeDL
 
 from app.config import Settings
 from app.models import Job
 from app.services import compat, formats, platforms
 from app.services.job_manager import Reporter
-from app.services.ytdlp_options import browser_request_opts
+from app.services.ytdlp_options import ReadOnlyCookiesYDL, browser_request_opts
 
 log = logging.getLogger("clipo")
 
@@ -80,7 +79,7 @@ def ytdlp_download(job: Job, out_dir: Path, reporter: Reporter, *, settings: Set
     opts["progress_hooks"] = [on_progress]
     opts["postprocessor_hooks"] = [on_postprocess]
 
-    with YoutubeDL(opts) as ydl:
+    with ReadOnlyCookiesYDL(opts) as ydl:
         info = ydl.extract_info(job.url, download=True)
 
     path = _find_output(out_dir, info)

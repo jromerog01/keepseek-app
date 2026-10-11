@@ -1,9 +1,8 @@
 from pathlib import Path
 
-from yt_dlp import YoutubeDL
 
 from app.services import platforms
-from app.services.ytdlp_options import browser_request_opts
+from app.services.ytdlp_options import ReadOnlyCookiesYDL, browser_request_opts
 
 RES_TARGETS = (2160, 1080, 720, 480)
 AUDIO_TARGETS = (320, 192, 128)
@@ -184,7 +183,7 @@ def analyze(url: str, cookies_path: Path | None = None) -> dict:
     if cookies_path:
         opts["cookiefile"] = str(cookies_path)
 
-    with YoutubeDL(opts) as ydl:
+    with ReadOnlyCookiesYDL(opts) as ydl:
         info = ydl.extract_info(url, download=False)
 
     platform = platforms.from_extractor(info.get("extractor_key"), url)
